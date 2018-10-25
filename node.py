@@ -2,6 +2,7 @@ import packet_transmission
 import packet_retrieval
 import sys
 import socket
+import hashlib
 
 # import thread
 from collections import deque
@@ -31,9 +32,9 @@ class StarNode(object):
 class Packet(object):
 
     def __init__(self, header, payload):
-        self.checksum = 0
         self.header = header
         self.payload = payload
+        self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
 
 class FilePacket(Packet):
 

@@ -4,7 +4,7 @@ import sys
 import socket
 import hashlib
 
-# import thread
+import threading
 from collections import deque
 
 class StarNode(object):
@@ -18,7 +18,6 @@ class StarNode(object):
         self.poc_addr = poc_addr
         self.poc_port = poc_port
         self.identity = name + ":" +  l_addr + ":" + l_port
-        print(self.identity)
 
         # Data Structures and Booleans
         self.rrt_vector = []
@@ -49,4 +48,26 @@ if __name__ == "__main__":
     poc_addr = sys.argv[3]
     poc_port = sys.argv[4]
     node = StarNode(name, l_addr, l_port, max_nodes, poc_addr, poc_port)
-    pass
+
+    # initialize locks
+    map_lock = threading.Lock()
+    recvq_lock = threading.Lock()
+    sendq_lock = threading.Lock()
+    printq_lock = threading.Lock()
+
+    # let's make some threads :)
+    args = (map_lock, recvq_lock, sendq_lock, printq_lock)
+    trans_thread = threading.Thread(target=packet_transmission, name="trans", args=args)
+    recv_thread = threading.Thread(target=packet_retrieval, name="recv", args=args)
+
+    # start the threads :)
+    try:
+        trans_thread.start()
+        recv_thread.start()
+    except:
+        # :(
+        print("Error occurred when starting threads")
+
+    # execute this to make the master thread wait on the other threads
+    # trans_thread.join()
+    # recv_thread.join()

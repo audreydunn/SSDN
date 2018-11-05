@@ -3,6 +3,7 @@ import packet_retrieval
 import sys
 import socket
 import hashlib
+import re
 
 import threading
 from collections import deque
@@ -20,7 +21,7 @@ class StarNode(object):
         self.identity = name + ":" +  l_addr + ":" + l_port
 
         # Data Structures and Booleans
-        self.rrt_vector = []
+        self.rtt_vector = {}
         self.sum_vector = []
         self.hub = False
         self.star_map = {}
@@ -59,6 +60,12 @@ class StarNode(object):
     '''
     def get_poc_addr(self):
         return self.poc_addr
+
+    '''
+    Return RTT Vector
+    '''
+    def get_rtt_vector(self):
+        return self.rtt_vector
 
     '''
     Update/Add a key, value pair to the star map
@@ -179,6 +186,10 @@ if __name__ == "__main__":
     printq_lock = threading.Lock()
     pipe_lock = threading.Lock()
 
+    # regex initialization for different send message matching
+    string_pattern = re.compile("^send \".+\"$")
+    file_pattern = re.compile("^send .+[.][a-z]+$")
+
     # let's make some threads :)
     args = (node, map_lock, transq_lock, sendq_lock, printq_lock, pipe_lock)
     trans_thread = threading.Thread(target=packet_transmission.functional_method, name="trans", args=args)
@@ -191,6 +202,38 @@ if __name__ == "__main__":
     except:
         # :(
         print("Error occurred when starting threads")
+
+    # gonna put command line stuff here, feel free to move it
+    while 1:
+        user_input = input("Star-node command: ")
+
+        # is send message?
+        if string_pattern.match(user_input):
+            # gets stuff between "'s -> send "<message>"
+            message = user_input[user_input.find("(")+1:user_input.find(")")]
+            print("Sending message {:s} to all nodes.".format(message))
+        # is send file?
+        elif file_pattern.match(user_input):
+            # gets filename -> |s|e|n|d| |<filename>|
+            filename = user_input[5:]
+            print("Sending file {:s} to all nodes.".format(filename))
+        elif user_input == "show-status":
+            print("Node status:")
+            curr_map = node.get_starmap()
+            rtt_vector = node.get_rtt_vector()
+            for key, value in curr_map.items():
+                print("ADDRESS: {:s} PORT: {:s} RTT: {:s}".format(key, value, rtt_vector.get(key)))
+            # need some way to display the currently selected hub as well
+        elif user_input == "disconnect":
+            print("Disconnecting...")
+            break
+            # might want to close some shit too
+        elif user_input == "show-log":
+            print("Hi. I'm a log.")
+            # print log
+        else:
+            print("Unknown command. Please use one of the following commands: send \"<message>\", "
+                  "send <filename>, show-status, disconnect, or show-log.")
 
     # execute this to make the master thread wait on the other threads
     # trans_thread.join()

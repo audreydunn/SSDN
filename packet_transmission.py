@@ -3,7 +3,7 @@ import socket
 def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_lock):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     state = 0
-    if node.get_poc_addr() not None:
+    if node.get_poc_addr() is not None:
         state = 1
     while(True):
         if (state == 0):
@@ -50,7 +50,7 @@ def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_
             state = 2
         if (state == 2):
             map_lock.acquire()
-            map_for_send = = node.get_starmap()
+            map_for_send = node.get_starmap()
             map_lock.release()
 
             for n in map_for_send:

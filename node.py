@@ -266,14 +266,14 @@ if __name__ == "__main__":
             # gets stuff between "'s -> send "<message>"
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
             packet = Packet(message, "MSG")
-            node.append_sq(packet.get_as_string())
+            node.append_sq(packet)
             logger.info("Added packet with message \"{:s}\" to send queue.".format(message))
         # is send file?
         elif file_pattern.match(user_input):
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
             packet = FilePacket(filename)
-            node.append_sq(packet.get_as_string())
+            node.append_sq(packet)
             logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")

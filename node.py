@@ -21,9 +21,11 @@ class StarNode(object):
         self.identity = name + ":" +  l_addr + ":" + l_port
 
         # Data Structures and Booleans
+
+        # (RTT, Sum)
+        self.hub = None
+        # this holds RTTs and the Sums known for each node (RTT, Sum)
         self.rtt_vector = {}
-        self.sum_vector = []
-        self.hub = False
         self.star_map = {}
         self.trans_q = deque()
         self.send_q = deque()
@@ -36,6 +38,36 @@ class StarNode(object):
         self.thread_pipe = None
 
     # TODO: write helper methods for vectors
+
+    '''
+    Helper method for calculating RTT sum of this node
+    '''
+    def update_rtt_sum(self):
+        sum = 0
+        for key in rtt_vector:
+            if key != (self.l_addr, self.l_port):
+                sum += rtt_vector[key][0]
+        self.rtt_sum = sum
+
+    '''
+    Helper method for calculating which node is the current Hub
+    '''
+    def update_hub(self):
+        max = -1
+        hub = None
+        for key in rtt_vector:
+            if rtt_vector[key][1] > max:
+                max = rtt_vector[key][1]
+                hub = key
+        self.hub = hub
+
+    '''
+    Helper method checking whether this node is the Hub
+    '''
+    def is_hub(self):
+        if self.hub == (self.l_addr, self.l_port):
+            return True
+        return False
 
     '''
     Return thread pipe data

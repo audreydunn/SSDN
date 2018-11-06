@@ -15,7 +15,7 @@ def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_
             node.load_pipe(0, "map")
             pipe_lock.release()
             # not sure if read needs to be locked will have to debug
-            # safely locking it right now to be safe
+            # locking it right now to be safe
             go_agane = True
             new_map = None
             while(go_agane):
@@ -36,8 +36,8 @@ def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_
 
             map_for_send = node.get_starmap()
             map_lock.release()
+            
             # send out new map packets in broadcast if needed
-
             if broadcast:
                 # make packet
                 pass

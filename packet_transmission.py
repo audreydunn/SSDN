@@ -1,6 +1,8 @@
 import socket
+import logging
 
 def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_lock):
+    logger = logging.getLogger('node')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     state = 0
     if node.get_poc_addr() is not None:
@@ -33,6 +35,7 @@ def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_
                 if key not in node.get_starmap():
                     broadcast =  True
                     node.update_starmap(key, new_map[key])
+                    logger.info("Discovered new star-node {:s}.".format(key))
 
             map_for_send = node.get_starmap()
             map_lock.release()
@@ -64,5 +67,6 @@ def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_
         if (state == 3):
             packet, addr, port = node.pop_sq()
             s.sendto(packet, (addr, port))
+            logger.info("Sent packet to {:s}".format((addr, port)))
             if node.is_sq_empty():
                 state = 2

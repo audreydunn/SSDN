@@ -2,11 +2,16 @@ import packet_transmission
 import packet_retrieval
 import sys
 import socket
-import hashlib
 import re
+import logging
+import logging.handlers
+import os
 
 import threading
 from collections import deque
+from packets import Packet
+from packets import FilePacket
+from packets import json_to_packet
 
 class StarNode(object):
 
@@ -36,6 +41,12 @@ class StarNode(object):
         self.thread_pipe = None
 
     # TODO: write helper methods for vectors
+
+    '''
+    Return node's local port
+    '''
+    def get_l_port(self):
+        return self.l_port
 
     '''
     Return thread pipe data
@@ -157,18 +168,6 @@ class StarNode(object):
     def pop_pq(self):
         return self.print_q.popleft()
 
-class Packet(object):
-
-    def __init__(self, header, payload):
-        self.header = header
-        self.payload = payload
-        self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
-
-class FilePacket(Packet):
-
-    def __init__(self, header, payload):
-        super(header, payload)
-
 if __name__ == "__main__":
     name = sys.argv[1]
     l_addr = socket.gethostbyname(socket.gethostname())
@@ -177,7 +176,30 @@ if __name__ == "__main__":
     poc_addr = sys.argv[3]
     poc_port = sys.argv[4]
 
+    # Initialize logger
+    logger = logging.getLogger('node')
+    logger.setLevel(logging.DEBUG)
+    logging_filename = 'node-{:s}.log'.format(name)
+    # create file handler which logs even debug messages
+    # fh = logging.FileHandler('node-{:s}.log'.format(name))
+    should_roll_over = os.path.isfile(logging_filename)
+    fh = logging.handlers.RotatingFileHandler(logging_filename, mode='w', backupCount=0)
+    if should_roll_over:  # log already exists, roll over!
+        fh.doRollover()
+    fh.setLevel(logging.DEBUG)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
     node = StarNode(name, l_addr, l_port, max_nodes, poc_addr, poc_port)
+    logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
 
     # initialize locks
     map_lock = threading.Lock()
@@ -201,39 +223,50 @@ if __name__ == "__main__":
         recv_thread.start()
     except:
         # :(
-        print("Error occurred when starting threads")
+        logger.error("Error occurred when starting threads")
 
     # gonna put command line stuff here, feel free to move it
     while 1:
-        user_input = input("Star-node command: ")
+        user_input = input("\nStar-node command: ")
 
         # is send message?
         if string_pattern.match(user_input):
             # gets stuff between "'s -> send "<message>"
-            message = user_input[user_input.find("(")+1:user_input.find(")")]
-            print("Sending message {:s} to all nodes.".format(message))
+            message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
+            packet = Packet(message, "MSG")
+            node.append_sq(packet.get_as_string())
+            logger.info("Added packet with message \"{:s}\" to send queue.".format(message))
         # is send file?
         elif file_pattern.match(user_input):
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
-            print("Sending file {:s} to all nodes.".format(filename))
+            packet = FilePacket(filename)
+            node.append_sq(packet.get_as_string())
+            logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
-            print("Node status:")
+            print("--BEGIN STATUS--")
             curr_map = node.get_starmap()
             rtt_vector = node.get_rtt_vector()
             for key, value in curr_map.items():
                 print("ADDRESS: {:s} PORT: {:s} RTT: {:s}".format(key, value, rtt_vector.get(key)))
-            # need some way to display the currently selected hub as well
+            # TODO: need some way to display the currently selected hub as well
+            print("--END STATUS--")
+            logger.debug("Printed status.")
         elif user_input == "disconnect":
-            print("Disconnecting...")
+            logger.info("Node disconnected.")
             break
             # might want to close some shit too
         elif user_input == "show-log":
-            print("Hi. I'm a log.")
-            # print log
+            print("--BEGIN LOG--")
+            f = open(logging_filename, 'r')
+            file_contents = f.read()
+            print(file_contents.strip())
+            f.close()
+            print("--END LOG--")
+            logger.debug("Printed log.")
         else:
-            print("Unknown command. Please use one of the following commands: send \"<message>\", "
-                  "send <filename>, show-status, disconnect, or show-log.")
+            logger.error("Unknown command. Please use one of the following commands: send \"<message>\", "
+                         "send <filename>, show-status, disconnect, or show-log.")
 
     # execute this to make the master thread wait on the other threads
     # trans_thread.join()

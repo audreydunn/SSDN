@@ -1,6 +1,11 @@
 import logging
+import socket
 
-def functional_method(node, map_lock, recvq_lock, sendq_lock, printq_lock, pipe_lock):
+def core(Print_queue, Recv_queue):
     logger = logging.getLogger('node')
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.bind((node.get_l_addr(), node.get_l_port()))
     while(True):
-        pass
+        data, addr = s.recvfrom(1024)
+
+        Recv_queue.put(data)

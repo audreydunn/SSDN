@@ -1,5 +1,7 @@
 import packet_transmission
 import packet_retrieval
+import packet_ping
+import packet_processing
 import sys
 import socket
 import re
@@ -8,197 +10,53 @@ import logging.handlers
 import os
 
 import threading
-from collections import deque
+from queue import Queue, PriorityQueue
+
 from packets import Packet
 from packets import FilePacket
 from packets import json_to_packet
 
-class StarNode(object):
+# Globals needing locks
+Hub = None
+Star_map = {}
 
-    def __init__(self, name, l_addr, l_port, max_nodes, poc_addr=None, poc_port=None):
-        # constructor variables
-        self.name = name
-        self.l_addr = l_addr
-        self.l_port = l_port
-        self.n = max_nodes
-        self.poc_addr = poc_addr
-        self.poc_port = poc_port
-        self.identity = name + ":" +  l_addr + ":" + l_port
+# Global Queues
+Trans_queue = PriorityQueue()
+Recv_queue = Queue()
+Print_queue = Queue()
 
-        # Data Structures and Booleans
+'''
+Helper method for calculating RTT sum of this node
+Star_map lock needs to be acquired
+'''
+def update_rtt_sum(self, l_addr, l_port):
+    sum = 0
+    for key in Star_map:
+        if key != (l_addr, l_port):
+            sum += Star_map[key][0]
+    Star_map[(l_addr, l_port)] = (0, sum)
 
-        # (RTT, Sum)
-        self.hub = None
-        # this holds RTTs and the Sums known for each node (RTT, Sum)
-        self.rtt_vector = {}
-        self.star_map = {}
-        self.trans_q = deque()
-        self.send_q = deque()
-        self.print_q = deque()
+'''
+Helper method for calculating which node is the current Hub
+Both Locks need to be acquired when this method is run
+'''
+def update_hub(self):
+    max = -1
+    hub = None
+    for key in Star_map:
+        if Star_map[key][1] > max:
+            max = Star_map[key][1]
+            hub = key
+    Hub = hub
 
-        # useful for passing signals :)
-        # Format: (code #, data requested)
-        # code 0 = I need some data
-        # code 1 = Here's the data
-        self.thread_pipe = None
-
-    # TODO: write helper methods for vectors
-
-    '''
-    Return node's local port
-    '''
-    def get_l_port(self):
-        return self.l_port
-
-    '''
-    Helper method for calculating RTT sum of this node
-    '''
-    def update_rtt_sum(self):
-        sum = 0
-        for key in rtt_vector:
-            if key != (self.l_addr, self.l_port):
-                sum += rtt_vector[key][0]
-        self.rtt_sum = sum
-
-    '''
-    Helper method for calculating which node is the current Hub
-    '''
-    def update_hub(self):
-        max = -1
-        hub = None
-        for key in rtt_vector:
-            if rtt_vector[key][1] > max:
-                max = rtt_vector[key][1]
-                hub = key
-        self.hub = hub
-
-    '''
-    Helper method checking whether this node is the Hub
-    '''
-    def is_hub(self):
-        if self.hub == (self.l_addr, self.l_port):
-            return True
-        return False
-
-    '''
-    Return thread pipe data
-    '''
-    def get_pipe(self):
-        return self.thread_pipe
-
-    '''
-    Place data into pipe
-    '''
-    def load_pipe(self, code, payload):
-        self.thread_pipe = (code, payload)
-
-    '''
-    Return POC Port
-    '''
-    def get_poc_port(self):
-        return self.poc_port
-
-    '''
-    Return POC Address
-    '''
-    def get_poc_addr(self):
-        return self.poc_addr
-
-    '''
-    Return RTT Vector
-    '''
-    def get_rtt_vector(self):
-        return self.rtt_vector
-
-    '''
-    Update/Add a key, value pair to the star map
-    '''
-    def update_starmap(self, key, value):
-        self.star_map[key] = value
-
-    '''
-    Return value stored in star map
-    '''
-    def lookup_starmap(self, key):
-        return self.star_map[key]
-
-    '''
-    Return current star map
-    '''
-    def get_starmap(self):
-        return self.star_map
-
-    '''
-    Invert the truth value of hub
-    '''
-    def flip_hub(self):
-        self.hub = not self.hub
-
-    '''
-    Return the identity string
-    '''
-    def get_identity(self):
-        return self.identity
-
-    '''
-    Return whether transmission queue is empty
-    '''
-    def is_tq_empty(self):
-        if len(self.trans_q) > 0:
-            return True
-        return False
-
-    '''
-    Return whether send queue is empty
-    '''
-    def is_sq_empty(self):
-        if len(self.send_q) > 0:
-            return True
-        return False
-
-    '''
-    Return whether print queue is empty
-    '''
-    def is_pq_empty(self):
-        if len(self.print_q) > 0:
-            return True
-        return False
-
-    '''
-    Append item to transmission queue
-    '''
-    def append_tq(self, item):
-        self.trans_q.append(item)
-
-    '''
-    Append item to send queue
-    '''
-    def append_sq(self, item):
-        self.send_q.append(item)
-
-    '''
-    Append item to print queue
-    '''
-    def append_pq(self, item):
-        self.print_q.append(item)
-
-    '''
-    Remove and return item from front of transmission queue
-    '''
-    def pop_tq(self):
-        return self.trans_q.popleft()
-
-    '''
-    Remove and return item from front of send queue
-    '''
-    def pop_sq(self):
-        return self.send_q.popleft()
-
-    '''
-    Remove and return item from front of print queue
-    '''
-    def pop_pq(self):
-        return self.print_q.popleft()
+'''
+Helper method checking whether this node is the Hub
+Hub lock needs to be acquired
+'''
+def is_hub(self, l_addr, l_port):
+    if Hub == (l_addr, l_port):
+        return True
+    return False
 
 if __name__ == "__main__":
     name = sys.argv[1]
@@ -230,29 +88,42 @@ if __name__ == "__main__":
     logger.addHandler(fh)
     logger.addHandler(ch)
 
-    node = StarNode(name, l_addr, l_port, max_nodes, poc_addr, poc_port)
-    logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
-
-    # initialize locks
-    map_lock = threading.Lock()
-    transq_lock = threading.Lock()
-    sendq_lock = threading.Lock()
-    printq_lock = threading.Lock()
-    pipe_lock = threading.Lock()
-
     # regex initialization for different send message matching
     string_pattern = re.compile("^send \".+\"$")
     file_pattern = re.compile("^send .+[.][a-z]+$")
 
+    # initialize static variables (these never change)
+    identity = name + ":" + l_addr + ":" + l_port
+    poc_info = None
+    if poc_addr is not None:
+        poc_info = (poc_addr, int(poc_port))
+    n = max_nodes
+
+    logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
+
+    # initialize locks
+    map_lock = threading.Lock()
+    hub_lock = threading.Lock()
+
+    # create event for Ping Thread
+    start_pings = threading.Event()
+
     # let's make some threads :)
-    args = (node, map_lock, transq_lock, sendq_lock, printq_lock, pipe_lock)
-    trans_thread = threading.Thread(target=packet_transmission.functional_method, name="trans", args=args)
-    recv_thread = threading.Thread(target=packet_retrieval.functional_method, name="recv", args=args)
+    args1 = (Print_queue, Trans_queue, map_lock)
+    args2 = (Print_queue, Recv_queue)
+    args3 = (Print_queue, Trans_queue, map_lock, identity, start_pings)
+    args4 = (Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
+    trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
+    recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
+    ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)
+    proc_thread = threading.Thread(target=packet_processing.core, name="proc", args=args4)
 
     # start the threads :)
     try:
         trans_thread.start()
         recv_thread.start()
+        ping_thread.start()
+        proc_thread.start()
     except:
         # :(
         logger.error("Error occurred when starting threads")
@@ -265,15 +136,27 @@ if __name__ == "__main__":
         if string_pattern.match(user_input):
             # gets stuff between "'s -> send "<message>"
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
-            packet = Packet(message, "MSG")
-            node.append_sq(packet)
+
+            with hub_lock:
+                hub = node.get_hub()
+
+            packet = Packet(message, "MSG", l_addr, l_port, hub[0], hub[1])
+
+            Trans_queue.put((0, packet))
+
             logger.info("Added packet with message \"{:s}\" to send queue.".format(message))
         # is send file?
         elif file_pattern.match(user_input):
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
-            packet = FilePacket(filename)
-            node.append_sq(packet)
+
+            with hub_lock:
+                hub = node.get_hub()
+
+            packet = FilePacket(filename, l_addr, l_port, hub[0], hub[1])
+
+            Trans_queue.put((0, packet))
+
             logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
@@ -299,7 +182,3 @@ if __name__ == "__main__":
         else:
             logger.error("Unknown command. Please use one of the following commands: send \"<message>\", "
                          "send <filename>, show-status, disconnect, or show-log.")
-
-    # execute this to make the master thread wait on the other threads
-    # trans_thread.join()
-    # recv_thread.join()

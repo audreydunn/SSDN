@@ -4,9 +4,13 @@ import json
 
 class Packet(object):
 
-    def __init__(self, payload, packet_type):
+    def __init__(self, payload, packet_type, s_addr, s_port, d_addr, d_port):
         self.payload = payload
         self.packet_type = packet_type
+        self.s_addr = s_addr
+        self.s_port = s_port
+        self.d_addr = d_addr
+        self.d_port = d_port
         self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
 
         # sets length based off of packet-type
@@ -22,10 +26,23 @@ class Packet(object):
             "Header": {
                 "Type": self.packet_type,
                 "Checksum": self.checksum,
-                "Length": self.length
+                "Length": self.length,
+                "SourceAddr": self.s_addr,
+                "SourcePort": self.s_port,
+                "DestAddr": self.d_addr,
+                "DestPort": self.d_port
             },
             "Payload": self.payload
         })
+
+    def __eq__(self, other):
+        return self.length == other.length
+
+    def __lt__(self, other):
+        return self.length < other.length
+
+    def __gt__(self, other):
+        return self.length > other.length
 
     ###########
     # GETTERS #
@@ -40,9 +57,9 @@ class Packet(object):
 
 class FilePacket(Packet):
 
-    def __init__(self, filename):
+    def __init__(self, filename, s_addr, s_port, d_addr, d_port):
         payload = filename  # TODO: SERIALIZE THIS
-        super(FilePacket, self).__init__(payload, "FILE")
+        super(FilePacket, self).__init__(payload, "FILE", s_addr, s_port, d_addr, d_port)
 
 
 def json_to_packet(json_string):

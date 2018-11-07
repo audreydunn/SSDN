@@ -41,11 +41,11 @@ Helper method for calculating which node is the current Hub
 Both Locks need to be acquired when this method is run
 '''
 def update_hub(self):
-    max = -1
+    min = 99999999999
     hub = None
     for key in Star_map:
-        if Star_map[key][1] > max:
-            max = Star_map[key][1]
+        if Star_map[key][1] < min:
+            min = Star_map[key][1]
             hub = key
     Hub = hub
 

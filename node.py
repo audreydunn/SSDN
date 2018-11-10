@@ -100,7 +100,7 @@ if __name__ == "__main__":
     n = max_nodes
 
     # create our initial node entry in the star map
-    Star_map[(l_addr, int(l_port)] = (0,0)
+    Star_map[(l_addr, int(l_port)] = [0,0]
 
     logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
 
@@ -112,10 +112,10 @@ if __name__ == "__main__":
     start_pings = threading.Event()
 
     # let's make some threads :)
-    args1 = (Print_queue, Trans_queue, map_lock)
+    args1 = (Print_queue, Trans_queue)
     args2 = (Print_queue, Recv_queue, identity)
-    args3 = (Print_queue, Trans_queue, map_lock, identity, start_pings)
-    args4 = (Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
+    args3 = (Star_map, Print_queue, Trans_queue, map_lock, identity, start_pings)
+    args4 = (Star_map, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)
@@ -140,10 +140,7 @@ if __name__ == "__main__":
             # gets stuff between "'s -> send "<message>"
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
 
-            with hub_lock:
-                hub = Hub
-
-            packet = Packet(message, "MSG", l_addr, l_port, hub[0], hub[1])
+            packet = Packet(message, "MSG", l_addr, l_port, Hub[0], Hub[1])
 
             Trans_queue.put((0, packet))
 
@@ -153,18 +150,13 @@ if __name__ == "__main__":
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
 
-            with hub_lock:
-                hub = Hub
-
-            packet = FilePacket(filename, l_addr, l_port, hub[0], hub[1])
+            packet = FilePacket(filename, l_addr, l_port, Hub[0], Hub[1])
 
             Trans_queue.put((0, packet))
 
             logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
-            with hub_lock:
-                hub = Hub
             curr_map = Star_map
             for key, value in curr_map.items():
                 print("IDENTITY: {:s} RTT: {:s}".format(key, value))

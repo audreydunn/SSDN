@@ -1,7 +1,7 @@
 import logging
 import socket
 
-def core(Print_queue, Trans_queue, map_lock):
+def core(Print_queue, Trans_queue):
     logger = logging.getLogger('node')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     while(True):

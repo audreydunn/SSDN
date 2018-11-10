@@ -5,10 +5,7 @@ def core(Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     while(True):
-        check = False
         if not Recv_queue.empty():
-            check = True
-        if check:
             data, addr = Recv_queue.get()
 
             packet = json.loads(data)
@@ -34,7 +31,7 @@ def core(Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc
 
 
                 Print_queue.put(packet["Payload"])
-                
+
             elif type == "MSG_HUB":
                 pass
             elif type == "FILE":

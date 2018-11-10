@@ -46,7 +46,7 @@ def update_hub(self):
     for key in Star_map:
         if Star_map[key][1] < min:
             min = Star_map[key][1]
-            hub = key
+            hub = (key[0], int(key[1]))
     Hub = hub
 
 '''
@@ -99,6 +99,9 @@ if __name__ == "__main__":
         poc_info = (poc_addr, int(poc_port))
     n = max_nodes
 
+    # create our initial node entry in the star map
+    Star_map[(l_addr, int(l_port)] = (0,0)
+
     logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
 
     # initialize locks
@@ -110,7 +113,7 @@ if __name__ == "__main__":
 
     # let's make some threads :)
     args1 = (Print_queue, Trans_queue, map_lock)
-    args2 = (Print_queue, Recv_queue)
+    args2 = (Print_queue, Recv_queue, identity)
     args3 = (Print_queue, Trans_queue, map_lock, identity, start_pings)
     args4 = (Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)

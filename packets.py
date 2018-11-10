@@ -64,4 +64,6 @@ class FilePacket(Packet):
 
 def json_to_packet(json_string):
     packet_json = json.loads(json_string)
-    return Packet(packet_json["Payload"], packet_json["Header"]["Type"])
+    return Packet(packet_json["Payload"], packet_json["Header"]["Type"], packet_json["Header"]["SourceAddr"],
+                  packet_json["Header"]["SourcePort"], packet_json["Header"]["DestAddr"],
+                  packet_json["Header"]["DestPort"])

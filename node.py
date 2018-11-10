@@ -138,7 +138,7 @@ if __name__ == "__main__":
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
 
             with hub_lock:
-                hub = node.get_hub()
+                hub = Hub
 
             packet = Packet(message, "MSG", l_addr, l_port, hub[0], hub[1])
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
             filename = user_input[5:]
 
             with hub_lock:
-                hub = node.get_hub()
+                hub = Hub
 
             packet = FilePacket(filename, l_addr, l_port, hub[0], hub[1])
 
@@ -160,11 +160,12 @@ if __name__ == "__main__":
             logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
-            curr_map = node.get_starmap()
-            rtt_vector = node.get_rtt_vector()
+            with hub_lock:
+                hub = Hub
+            curr_map = Star_map
             for key, value in curr_map.items():
-                print("ADDRESS: {:s} PORT: {:s} RTT: {:s}".format(key, value, rtt_vector.get(key)))
-            # TODO: need some way to display the currently selected hub as well
+                print("IDENTITY: {:s} RTT: {:s}".format(key, value))
+            print("HUB: {:s}", Hub)
             print("--END STATUS--")
             logger.debug("Printed status.")
         elif user_input == "disconnect":

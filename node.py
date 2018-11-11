@@ -33,8 +33,7 @@ def update_rtt_sum(map, l_addr, l_port):
     for key in map:
         if key != (l_addr, l_port):
             sum += map[key][0]
-    map[(l_addr, l_port)] = (map[(l_addr, l_port)][0], sum)
-
+    map[(l_addr, l_port)] = (sum, 0)
 
 '''
 Helper method for calculating which node is the current Hub
@@ -49,17 +48,6 @@ def update_hub(Hub, map):
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]
     Hub[1] = hub[1]
-
-
-'''
-Helper method checking whether this node is the Hub
-Hub lock needs to be acquired
-'''
-def is_hub(l_addr, l_port):
-    if Hub == (l_addr, l_port):
-        return True
-    return False
-
 
 if __name__ == "__main__":
     name = sys.argv[1]

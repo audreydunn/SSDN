@@ -66,9 +66,24 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
                 pass
             elif type == "RTT_REQ":
+                activate_thread = False
+
+                payload_json = json.loads(packet["Payload"])
+                sent_map = payload_json["Map"]
+                sent_time = payload_json["Timestamp"]
+
+                with map_lock:
+                    if len(Star_map) == 1:
+                        activate_thread = True
+
+                    # add new node to our map if known by other node
+                    for i in sent_map:
+                        if i not in Star_map:
+                            Star_map[i] = [sent_map[i][0], 0]
+
                 payload = json.dumps({
                     "Map": str(Star_map),
-                    "Timestamp": str(packet["Payload"])
+                    "Timestamp": str(sent_time)
                 })
                 packet = Packet(payload, "RTT_RESP", l_addr, l_port, packet["Header"]["SourceAddr"],
                                 packet["Header"]["SourcePort"])
@@ -77,10 +92,12 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 source_identity = "{:s}:{:s}".format(packet_json["Header"]["SourceAddr"],
                                                      packet_json["Header"]["SourcePort"])
                 logger.info("Received RTT request from {:s}".format(source_identity))
+
+                if activate_thread:
+                    start_pings.set()
             elif type == "RTT_RESP":
                 activate_thread = False
 
-                # update copy of map
                 payload_json = json.loads(packet["Payload"])
                 sent_map = payload_json["Map"]
                 sent_time = payload_json["Timestamp"]
@@ -90,20 +107,10 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 RTT = float(diff.seconds) + (diff.microseconds / 1000000.0)
 
                 with map_lock:
-                    if len(Star_map) == 1:
-                        activate_thread = True
-
                     # update source node in our mapping
                     Star_map[source_node] = [sent_map[source_node][0], RTT]
-                    # add new node to our map if known by other node
-                    for i in sent_map:
-                        if i not in Star_map:
-                            Star_map[i] = [sent_map[i][0], 0]
 
                     update_rtt_sum(Star_map, l_addr, l_port)
 
                     with hub_lock:
                         update_hub(Hub, Star_map)
-
-                if activate_thread:
-                    start_pings.set()

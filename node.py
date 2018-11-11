@@ -94,13 +94,14 @@ if __name__ == "__main__":
 
     # initialize static variables (these never change)
     identity = name + ":" + l_addr + ":" + l_port
-    poc_info = None
-    if poc_addr is not None:
-        poc_info = (poc_addr, int(poc_port))
     n = max_nodes
 
     # create our initial node entry in the star map
     Star_map[(l_addr, int(l_port))] = [0, 0]
+
+    # create initial entry for POC if one exists:
+    if poc_addr is not None:
+        Star_map[(poc_addr, int(poc_port))] = [0, 0]
 
     # initialize Hub to our node
     Hub[0], Hub[1] = l_addr, int(l_port)
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     args1 = (Trans_queue, 0)
     args2 = (Recv_queue, identity)
     args3 = (Star_map, Trans_queue, map_lock, identity, start_pings)
-    args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
+    args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)
@@ -133,6 +134,9 @@ if __name__ == "__main__":
     except:
         # :(
         logger.error("Error occurred when starting threads")
+
+    if poc_addr is not None:
+        start_pings.set()
 
     # gonna put command line stuff here, feel free to move it
     while 1:

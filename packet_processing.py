@@ -8,7 +8,7 @@ from packets import Packet
 from packets import FilePacket
 
 
-def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings):
+def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings):
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     l_port = int(l_port)

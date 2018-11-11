@@ -13,7 +13,11 @@ def core(Star_map, Trans_queue, map_lock, identity, start_pings):
         with map_lock:
             for node in Star_map:
                 if node != (l_addr, l_port):
-                    packet = Packet(datetime.datetime.now().__repr__(), "RTT_REQ", l_addr, l_port, node[0], node[1])
+                    payload = json.dumps({
+                        "Map": Star_map.__repr__(),
+                        "Timestamp": datetime.datetime.now().__repr__()
+                    })
+                    packet = Packet(payload, "RTT_REQ", l_addr, l_port, node[0], node[1])
                     Trans_queue.put((1, packet))
         # wait for 60 sec
         time.sleep(60)

@@ -1,7 +1,8 @@
 import logging
 import socket
 
-def core(Print_queue, Recv_queue, identity):
+
+def core(Recv_queue, identity):
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     l_port = int(l_port)
@@ -9,4 +10,5 @@ def core(Print_queue, Recv_queue, identity):
     s.bind((l_addr, l_port))
     while(True):
         data, addr = s.recvfrom(1024)
+        logger.info("Received packet from {:s}.".format(addr))
         Recv_queue.put(data)

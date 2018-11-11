@@ -23,7 +23,6 @@ Star_map = {}
 # Global Queues
 Trans_queue = PriorityQueue()
 Recv_queue = Queue()
-Print_queue = Queue()
 
 '''
 Helper method for calculating RTT sum of this node
@@ -101,7 +100,7 @@ if __name__ == "__main__":
     n = max_nodes
 
     # create our initial node entry in the star map
-    Star_map[(l_addr, int(l_port)] = [0,0]
+    Star_map[(l_addr, int(l_port))] = [0, 0]
 
     # initialize Hub to our node
     Hub[0], Hub[1] = l_addr, int(l_port)
@@ -116,10 +115,10 @@ if __name__ == "__main__":
     start_pings = threading.Event()
 
     # let's make some threads :)
-    args1 = (Print_queue, Trans_queue)
-    args2 = (Print_queue, Recv_queue, identity)
-    args3 = (Star_map, Print_queue, Trans_queue, map_lock, identity, start_pings)
-    args4 = (Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
+    args1 = (Trans_queue, 0)
+    args2 = (Recv_queue, identity)
+    args3 = (Star_map, Trans_queue, map_lock, identity, start_pings)
+    args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)

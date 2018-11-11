@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 
 
 class Packet(object):
@@ -58,7 +59,18 @@ class Packet(object):
 class FilePacket(Packet):
 
     def __init__(self, filename, s_addr, s_port, d_addr, d_port):
-        payload = filename  # TODO: SERIALIZE THIS
+        file_max = 64000
+        file = open(filename, "rb")
+        data = file.read(file_max)
+        # logger = logging.getLogger('node')
+        # if file.read():
+        #     logger.error("File-size of file {:s} is larger than 64KB.".format(filename))
+        # else:
+        payload = json.dumps({
+            "Filename": filename,
+            "Data": data
+        })
+        file.close()
         super(FilePacket, self).__init__(payload, "FILE", s_addr, s_port, d_addr, d_port)
 
 

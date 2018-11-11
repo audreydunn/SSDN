@@ -2,10 +2,11 @@ import logging
 import json
 import datetime
 import copy
-
+import os
 from node import update_rtt_sum, update_hub
 
-def core(Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings):
+
+def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings):
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     l_port = int(l_port)
@@ -13,7 +14,7 @@ def core(Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock
         if not Recv_queue.empty():
             data, addr = Recv_queue.get()
 
-            packet = json.loads(data)
+            packet = json.loads(data.strip())
 
             type = packet["Header"]["Type"]
 
@@ -27,8 +28,8 @@ def core(Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock
                 # no losing nodes in Milestone 2
                 pass
             elif type == "MSG":
-                Print_queue.put(packet["Payload"])
-
+                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
+                logger.info("Received message from {:s}: {:s}".format(source_identity, packet["Payload"]))
             elif type == "MSG_HUB":
                 flag = False
                 with hub_lock:
@@ -48,7 +49,16 @@ def core(Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock
 
                     Trans_queue.put((0, packet))
             elif type == "FILE":
-                # not currently implemented
+                if not os.path.exists("downloads"):
+                    os.mkdir("downloads")
+
+                filename = "downloads/{:s}".format(packet["Payload"]["Filename"])
+                file = open(filename, "wb")
+                file.write(packet["Payload"]["Data"])
+                file.close()
+
+                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
                 pass
             elif type == "RTT_REQ":
                 packet = Packet((Star_map, packet["Payload"]), "RTT_RESP", l_addr, l_port, packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])

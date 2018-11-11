@@ -4,6 +4,8 @@ import datetime
 import copy
 import os
 from node import update_rtt_sum, update_hub
+from packets import Packet
+from packets import FilePacket
 
 
 def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings):

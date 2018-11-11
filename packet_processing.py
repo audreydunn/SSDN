@@ -12,7 +12,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, p
     l_port = int(l_port)
     while(True):
         if not Recv_queue.empty():
-            data, addr = Recv_queue.get()
+            data = Recv_queue.get()
 
             packet = json.loads(data.strip())
 

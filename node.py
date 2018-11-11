@@ -145,7 +145,7 @@ if __name__ == "__main__":
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
 
             with hub_lock:
-                packet = Packet(message, "MSG", l_addr, l_port, Hub[0], Hub[1])
+                packet = Packet(message, "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
 
             Trans_queue.put((0, packet))
 

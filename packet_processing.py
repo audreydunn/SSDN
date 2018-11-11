@@ -30,8 +30,23 @@ def core(Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock
                 Print_queue.put(packet["Payload"])
 
             elif type == "MSG_HUB":
-                for node in Star_map:
-                    pass
+                flag = False
+                with hub_lock:
+                    if Hub == (l_addr, l_port):
+                        flag = True
+
+                if flag:
+                    with map_lock:
+                        for node in Star_map:
+                            if node != (l_addr, l_port):
+                                packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
+                                Trans_queue.put((0, packet))
+                else:
+                    # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
+                    with hub_lock:
+                        packet = Packet(packet["Payload"], "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
+
+                    Trans_queue.put((0, packet))
             elif type == "FILE":
                 # not currently implemented
                 pass

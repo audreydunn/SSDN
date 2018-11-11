@@ -17,7 +17,7 @@ from packets import FilePacket
 from packets import json_to_packet
 
 # Globals needing locks
-Hub = None
+Hub = [None, None]
 Star_map = {}
 
 # Global Queues
@@ -29,25 +29,26 @@ Print_queue = Queue()
 Helper method for calculating RTT sum of this node
 Star_map lock needs to be acquired
 '''
-def update_rtt_sum(self, l_addr, l_port):
+def update_rtt_sum(self, map, l_addr, l_port):
     sum = 0
-    for key in Star_map:
+    for key in map:
         if key != (l_addr, l_port):
-            sum += Star_map[key][0]
-    Star_map[(l_addr, l_port)] = (0, sum)
+            sum += map[key][0]
+    map[(l_addr, l_port)] = (0, sum)
 
 '''
 Helper method for calculating which node is the current Hub
 Both Locks need to be acquired when this method is run
 '''
-def update_hub(self):
+def update_hub(self, Hub, map):
     min = 99999999999
     hub = None
-    for key in Star_map:
-        if Star_map[key][1] < min:
-            min = Star_map[key][1]
+    for key in map:
+        if map[key][1] < min:
+            min = map[key][1]
             hub = (key[0], int(key[1]))
-    Hub = hub
+    Hub[0] = hub[0]
+    Hub[1] = hub[1]
 
 '''
 Helper method checking whether this node is the Hub
@@ -102,6 +103,9 @@ if __name__ == "__main__":
     # create our initial node entry in the star map
     Star_map[(l_addr, int(l_port)] = [0,0]
 
+    # initialize Hub to our node
+    Hub[0], Hub[1] = l_addr, int(l_port)
+
     logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
 
     # initialize locks
@@ -115,7 +119,7 @@ if __name__ == "__main__":
     args1 = (Print_queue, Trans_queue)
     args2 = (Print_queue, Recv_queue, identity)
     args3 = (Star_map, Print_queue, Trans_queue, map_lock, identity, start_pings)
-    args4 = (Star_map, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
+    args4 = (Star_map, Hub, Print_queue, Recv_queue, Trans_queue, map_lock, hub_lock, identity, poc_info, n, start_pings)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)
@@ -140,7 +144,8 @@ if __name__ == "__main__":
             # gets stuff between "'s -> send "<message>"
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
 
-            packet = Packet(message, "MSG", l_addr, l_port, Hub[0], Hub[1])
+            with hub_lock:
+                packet = Packet(message, "MSG", l_addr, l_port, Hub[0], Hub[1])
 
             Trans_queue.put((0, packet))
 
@@ -150,17 +155,20 @@ if __name__ == "__main__":
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
 
-            packet = FilePacket(filename, l_addr, l_port, Hub[0], Hub[1])
+            with hub_lock:
+                packet = FilePacket(filename, l_addr, l_port, Hub[0], Hub[1])
 
             Trans_queue.put((0, packet))
 
             logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
-            curr_map = Star_map
-            for key, value in curr_map.items():
-                print("IDENTITY: {:s} RTT: {:s}".format(key, value))
-            print("HUB: {:s}", Hub)
+            with map_lock:
+                curr_map = Star_map
+                for key, value in curr_map.items():
+                    print("IDENTITY: {:s} RTT: {:s}".format(key, value))
+            with hub_lock:
+                print("HUB: {:s}", Hub)
             print("--END STATUS--")
             logger.debug("Printed status.")
         elif user_input == "disconnect":

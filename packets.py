@@ -12,7 +12,8 @@ class Packet(object):
         self.s_port = s_port
         self.d_addr = d_addr
         self.d_port = d_port
-        self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
+        self.checksum = 0
+        # self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
 
         # sets length based off of packet-type
         if packet_type == "FILE":

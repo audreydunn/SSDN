@@ -69,7 +69,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 activate_thread = False
 
                 payload_json = json.loads(packet["Payload"])
-                sent_map = payload_json["Map"]
+                sent_map = eval(payload_json["Map"])
                 sent_time = payload_json["Timestamp"]
 
                 with map_lock:
@@ -90,7 +90,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 Trans_queue.put((1, packet))
                 packet_json = json.loads(packet.get_as_string())
                 source_identity = "{0}:{1}".format(packet_json["Header"]["SourceAddr"],
-                                                     packet_json["Header"]["SourcePort"])
+                                                   packet_json["Header"]["SourcePort"])
                 logger.info("Received RTT request from {:s}".format(source_identity))
 
                 if activate_thread:

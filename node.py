@@ -33,7 +33,7 @@ def update_rtt_sum(map, l_addr, l_port):
     for key in map:
         if key != (l_addr, l_port):
             sum += map[key][0]
-    map[(l_addr, l_port)] = (0, sum)
+    map[(l_addr, l_port)] = (map[(l_addr, l_port)][0], sum)
 
 
 '''
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         # :(
         logger.error("Error occurred when starting threads")
 
-    if poc_addr is not None:
+    if poc_addr != '0':
         start_pings.set()
 
     # gonna put command line stuff here, feel free to move it

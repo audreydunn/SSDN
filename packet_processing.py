@@ -86,7 +86,8 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 sent_time = payload_json["Timestamp"]
                 source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                 logger.info("Received RTT response from {:s}".format(source_node))
-                RTT = (datetime.datetime.now() - sent_time).seconds
+                diff = (datetime.datetime.now() - sent_time)
+                RTT = float(diff.seconds) + (diff.microseconds / 1000000.0)
 
                 with map_lock:
                     if len(Star_map) == 1:

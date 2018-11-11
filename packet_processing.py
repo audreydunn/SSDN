@@ -35,7 +35,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, p
             elif type == "MSG_HUB":
                 flag = False
                 with hub_lock:
-                    if Hub == (l_addr, l_port):
+                    if Hub == [l_addr, l_port]:
                         flag = True
 
                 if flag:
@@ -44,6 +44,9 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, p
                             if node != (l_addr, l_port):
                                 packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
                                 Trans_queue.put((0, packet))
+                    source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                    logger.info("Received message from {:s}: {:s}".format(source_identity, packet["Payload"]))
+
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                     with hub_lock:
@@ -65,12 +68,15 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, p
             elif type == "RTT_REQ":
                 packet = Packet((Star_map, packet["Payload"]), "RTT_RESP", l_addr, l_port, packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                 Trans_queue.put((1, packet))
+                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                logger.info("Received RTT request from {:s}".format(source_identity))
             elif type == "RTT_RESP":
                 activate_thread = False
 
                 # update copy of map
                 sent_map, sent_time = packet["Payload"]
                 source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                logger.info("Received RTT response from {:s}".format(source_node))
                 RTT = (datetime.datetime.now() - sent_time).seconds
 
                 with map_lock:

@@ -66,15 +66,24 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
                 pass
             elif type == "RTT_REQ":
-                packet = Packet((Star_map, packet["Payload"]), "RTT_RESP", l_addr, l_port, packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                payload = json.dumps({
+                    "Map": str(Star_map),
+                    "Timestamp": str(packet["Payload"])
+                })
+                packet = Packet(payload, "RTT_RESP", l_addr, l_port, packet["Header"]["SourceAddr"],
+                                packet["Header"]["SourcePort"])
                 Trans_queue.put((1, packet))
-                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                packet_json = json.dumps(packet.get_as_string())
+                source_identity = "{:s}:{:s}".format(packet_json["Header"]["SourceAddr"],
+                                                     packet_json["Header"]["SourcePort"])
                 logger.info("Received RTT request from {:s}".format(source_identity))
             elif type == "RTT_RESP":
                 activate_thread = False
 
                 # update copy of map
-                sent_map, sent_time = packet["Payload"]
+                payload_json = json.loads(packet["Payload"])
+                sent_map = payload_json["Map"]
+                sent_time = payload_json["Timestamp"]
                 source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                 logger.info("Received RTT response from {:s}".format(source_node))
                 RTT = (datetime.datetime.now() - sent_time).seconds

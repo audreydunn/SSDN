@@ -100,7 +100,7 @@ if __name__ == "__main__":
     Star_map[(l_addr, int(l_port))] = [0, 0]
 
     # create initial entry for POC if one exists:
-    if poc_addr is not None:
+    if poc_addr != '0':
         Star_map[(poc_addr, int(poc_port))] = [0, 0]
 
     # initialize Hub to our node

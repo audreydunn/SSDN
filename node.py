@@ -28,18 +28,19 @@ Recv_queue = Queue()
 Helper method for calculating RTT sum of this node
 Star_map lock needs to be acquired
 '''
-def update_rtt_sum(self, map, l_addr, l_port):
+def update_rtt_sum(map, l_addr, l_port):
     sum = 0
     for key in map:
         if key != (l_addr, l_port):
             sum += map[key][0]
     map[(l_addr, l_port)] = (0, sum)
 
+
 '''
 Helper method for calculating which node is the current Hub
 Both Locks need to be acquired when this method is run
 '''
-def update_hub(self, Hub, map):
+def update_hub(Hub, map):
     min = 99999999999
     hub = None
     for key in map:
@@ -49,14 +50,16 @@ def update_hub(self, Hub, map):
     Hub[0] = hub[0]
     Hub[1] = hub[1]
 
+
 '''
 Helper method checking whether this node is the Hub
 Hub lock needs to be acquired
 '''
-def is_hub(self, l_addr, l_port):
+def is_hub(l_addr, l_port):
     if Hub == (l_addr, l_port):
         return True
     return False
+
 
 if __name__ == "__main__":
     name = sys.argv[1]
@@ -169,7 +172,7 @@ if __name__ == "__main__":
             with map_lock:
                 curr_map = Star_map
                 for key, value in curr_map.items():
-                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM:{3}".format(key[0], key[1], value[0], value[1]))
+                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3}".format(key[0], key[1], value[0], value[1]))
             with hub_lock:
                 print("HUB: {0}:{1}".format(Hub[0], Hub[1]))
             print("--END STATUS--")

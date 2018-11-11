@@ -14,4 +14,4 @@ def core(Trans_queue, hi):
             addr = json_data["Header"]["DestAddr"]
             port = json_data["Header"]["DestPort"]
             s.sendto(data.encode('utf-8'), (addr, port))
-            logger.info("Sent packet to {0}".format((addr, port)))
+            logger.info("Sent packet of type {0} to {1}".format(json_data["Header"]["Type"], (addr, port)))

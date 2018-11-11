@@ -10,5 +10,5 @@ def core(Recv_queue, identity):
     s.bind((l_addr, l_port))
     while(True):
         data, addr = s.recvfrom(1024)
-        logger.info("Received packet from {:s}.".format(addr))
+        logger.info("Received packet from {0}.".format(addr))
         Recv_queue.put(data)

@@ -1,0 +1,87 @@
+=======TERMINAL 1=======
+Initialized node TestNode on 10.0.0.221:6000, max nodes 5, POC: 0:0.
+/usr/local/bin/python3.7 /Users/Nicki/Documents/NetworkingP2/SSDN/node.py TestNode 6000 0 0 5
+
+Star-node command: send "hello"
+
+Star-node command: sead README.txt
+2018-11-11 22:16:46,639 - MainThread - ERROR - Unknown command. Please use one of the following commands: send "<message>", send <filename>, show-status, disconnect, or show-log.
+
+Star-node command: send README.md
+
+Star-node command: show-log
+--BEGIN LOG--
+2018-11-11 22:16:13,889 - MainThread - INFO - Initialized node TestNode on 10.0.0.221:6000, max nodes 5, POC: 0:0.
+2018-11-11 22:16:16,488 - proc - INFO - Received RTT request from 10.0.0.221:6000
+2018-11-11 22:16:16,495 - trans - INFO - Sent packet of type RTT_RESP to ('10.0.0.221', 6001)
+2018-11-11 22:16:16,506 - trans - INFO - Sent packet of type RTT_REQ to ('10.0.0.221', 6001)
+2018-11-11 22:16:16,563 - proc - INFO - Received RTT response from ('10.0.0.221', 6001)
+2018-11-11 22:16:16,569 - proc - INFO - Updated RTT sum to 0.074345
+2018-11-11 22:16:36,487 - proc - INFO - Received RTT request from 10.0.0.221:6000
+2018-11-11 22:16:36,536 - trans - INFO - Sent packet of type RTT_RESP to ('10.0.0.221', 6001)
+2018-11-11 22:16:36,536 - trans - INFO - Sent packet of type RTT_REQ to ('10.0.0.221', 6001)
+2018-11-11 22:16:36,536 - trans - INFO - Sent packet of type RTT_REQ to ('10.0.0.221', 6002)
+2018-11-11 22:16:36,558 - proc - INFO - Received RTT response from ('10.0.0.221', 6002)
+2018-11-11 22:16:36,558 - proc - INFO - Updated RTT sum to 0.127908
+2018-11-11 22:16:36,584 - proc - INFO - Received RTT response from ('10.0.0.221', 6001)
+2018-11-11 22:16:36,584 - proc - INFO - Updated RTT sum to 0.13351200000000002
+2018-11-11 22:16:39,397 - proc - INFO - Received RTT request from 10.0.0.221:6000
+2018-11-11 22:16:39,403 - trans - INFO - Sent packet of type RTT_RESP to ('10.0.0.221', 6002)
+2018-11-11 22:16:39,965 - MainThread - INFO - Added packet with message to hub "hello" to send queue.
+2018-11-11 22:16:39,977 - trans - INFO - Sent packet of type MSG_HUB to ('10.0.0.221', 6002)
+2018-11-11 22:16:46,639 - MainThread - ERROR - Unknown command. Please use one of the following commands: send "<message>", send <filename>, show-status, disconnect, or show-log.
+2018-11-11 22:16:56,501 - proc - INFO - Received RTT request from 10.0.0.221:6000
+2018-11-11 22:16:56,506 - trans - INFO - Sent packet of type RTT_RESP to ('10.0.0.221', 6001)
+2018-11-11 22:16:56,519 - trans - INFO - Sent packet of type RTT_REQ to ('10.0.0.221', 6001)
+2018-11-11 22:16:56,532 - trans - INFO - Sent packet of type RTT_REQ to ('10.0.0.221', 6002)
+2018-11-11 22:16:56,547 - proc - INFO - Received RTT response from ('10.0.0.221', 6001)
+2018-11-11 22:16:56,559 - proc - INFO - Updated RTT sum to 0.10006699999999999
+2018-11-11 22:16:56,566 - proc - INFO - Received RTT response from ('10.0.0.221', 6002)
+2018-11-11 22:16:56,572 - proc - INFO - Updated RTT sum to 0.105456
+2018-11-11 22:16:57,854 - MainThread - INFO - Added packet with file to hub "README.md" to send queue.
+2018-11-11 22:16:57,864 - trans - INFO - Sent packet of type FILE_HUB to ('10.0.0.221', 6002)
+2018-11-11 22:16:59,395 - proc - INFO - Received RTT request from 10.0.0.221:6000
+2018-11-11 22:16:59,402 - trans - INFO - Sent packet of type RTT_RESP to ('10.0.0.221', 6002)
+--END LOG--
+
+Star-node command: show-status
+--BEGIN STATUS--
+IDENTITY: 10.0.0.221:6000 | RTT: 0 | RTT-SUM: 0.105456
+IDENTITY: 10.0.0.221:6001 | RTT: 0.046504 | RTT-SUM: 0.043482
+IDENTITY: 10.0.0.221:6002 | RTT: 0.058952 | RTT-SUM: 0.042813
+HUB: 10.0.0.221:6002
+--END STATUS--
+
+Star-node command: disconnect
+
+Process finished with exit code 0
+
+
+=======TERMINAL 2=======
+/usr/local/bin/python3.7 /Users/Nicki/Documents/NetworkingP2/SSDN/node.py TestNode2 6001 10.0.0.221 6000 5
+Initialized node TestNode2 on 10.0.0.221:6001, max nodes 5, POC: 10.0.0.221:6000.
+
+Star-node command: Received message from 10.0.0.221:6000: hello
+Received file from 10.0.0.221:6000. Saved in downloads/README.md
+disconnect
+
+Process finished with exit code 0
+
+
+=======TERMINAL 3=======
+/usr/local/bin/python3.7 /Users/Nicki/Documents/NetworkingP2/SSDN/node.py TestNode3 6002 10.0.0.221 6001 5
+Initialized node TestNode3 on 10.0.0.221:6002, max nodes 5, POC: 10.0.0.221:6001.
+
+Star-node command: Received message from 10.0.0.221:6000: hello
+Received file from 10.0.0.221:6000. Saved in downloads/README.md
+show-status
+--BEGIN STATUS--
+IDENTITY: 10.0.0.221:6002 | RTT: 0 | RTT-SUM: 0.11596200000000001
+IDENTITY: 10.0.0.221:6001 | RTT: 0.098166 | RTT-SUM: 0.098936
+IDENTITY: 10.0.0.221:6000 | RTT: 0.017796 | RTT-SUM: 0.105456
+HUB: 10.0.0.221:6001
+--END STATUS--
+
+Star-node command: disconnect
+
+Process finished with exit code 0

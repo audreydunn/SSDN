@@ -108,6 +108,7 @@ if __name__ == "__main__":
     Hub[0], Hub[1] = l_addr, int(l_port)
 
     logger.info("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
+    print("Initialized node {:s} on {:s}:{:s}, max nodes {:s}, POC: {:s}:{:s}.".format(name, l_addr, l_port, max_nodes, poc_addr, poc_port))
 
     # initialize locks
     map_lock = threading.Lock()

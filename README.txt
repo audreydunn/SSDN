@@ -1,5 +1,5 @@
 Austin Dunn | adunn@gatech.edu | adunn39
-Nichole Deeb | email | id
+Nichole Deeb | ndeeb3@gatech.edu | ndeeb3
 
 Project 2 | Milestone 2 | 11/11/18
 

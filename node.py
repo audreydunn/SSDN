@@ -34,7 +34,7 @@ def update_rtt_sum(map, l_addr, l_port):
     sum = 0
     for key in map:
         if key != (l_addr, l_port):
-            sum += map[key][0]
+            sum += map[key][1]
     map[(l_addr, l_port)] = (sum, 0)
     logger_internal = logging.getLogger('node')
     logger_internal.info("Updated RTT sum to {0}".format(sum))

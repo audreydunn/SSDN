@@ -45,7 +45,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 if flag:
                     with map_lock:
                         for node in Star_map:
-                            if node != (l_addr, l_port):
+                            if node != (l_addr, l_port) and node != (packet["Header"]["SourceAddr"], int(packet["Header"]["SourcePort"])):
                                 new_packet = Packet(packet["Payload"], "MSG", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], node[0], node[1])
                                 Trans_queue.put((0, new_packet))
                     source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
@@ -81,7 +81,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 if flag:
                     with map_lock:
                         for node in Star_map:
-                            if node != (l_addr, l_port):
+                            if node != (l_addr, l_port) and node != (packet["Header"]["SourceAddr"], int(packet["Header"]["SourcePort"])):
                                 new_packet = Packet(packet["Payload"], "FILE", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], node[0], node[1])
                                 Trans_queue.put((0, new_packet))
 

@@ -33,8 +33,9 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 # no losing nodes in Milestone 2
                 pass
             elif type == "MSG":
-                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
-                logger.info("Received message from {:s}: {:s}".format(source_identity, packet["Payload"]))
+                source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
+                logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
+                print("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
             elif type == "MSG_HUB":
                 flag = False
                 with hub_lock:
@@ -48,7 +49,8 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                                 new_packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
                                 Trans_queue.put((0, new_packet))
                     source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    logger.info("Received message from {:s}: {:s}".format(source_identity, packet["Payload"]))
+                    logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
+                    print("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
 
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
@@ -66,8 +68,9 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 file.write(eval(payload_json["Data"]))
                 file.close()
 
-                source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
+                source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                logger.info("Received file from {0}. Saved in {1}".format(source_identity, filename))
+                print("Received file from {0}. Saved in {1}".format(source_identity, filename))
                 pass
             elif type == "FILE_HUB":
                 flag = False
@@ -92,8 +95,9 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                     file.write(eval(payload_json["Data"]))
                     file.close()
 
-                    source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
+                    source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                    logger.info("Received file from {0}. Saved in {1}".format(source_identity, filename))
+                    print("Received file from {0}. Saved in {1}".format(source_identity, filename))
 
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network

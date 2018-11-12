@@ -49,8 +49,8 @@ def update_hub(Hub, map):
     min = 99999999999
     hub = None
     for key in map:
-        if map[key][1] < min:
-            min = map[key][1]
+        if map[key][0] < min:
+            min = map[key][0]
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]
     Hub[1] = hub[1]

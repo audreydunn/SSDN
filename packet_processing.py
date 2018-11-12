@@ -8,11 +8,14 @@ from packets import Packet
 from packets import FilePacket
 
 
-def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings):
+def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock):
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     l_port = int(l_port)
     while(True):
+        with end_lock:
+            if End[0]:
+                break
         if not Recv_queue.empty():
             data = Recv_queue.get()
 
@@ -42,29 +45,61 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                     with map_lock:
                         for node in Star_map:
                             if node != (l_addr, l_port):
-                                packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
-                                Trans_queue.put((0, packet))
+                                new_packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
+                                Trans_queue.put((0, new_packet))
                     source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                     logger.info("Received message from {:s}: {:s}".format(source_identity, packet["Payload"]))
 
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                     with hub_lock:
-                        packet = Packet(packet["Payload"], "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
-
-                    Trans_queue.put((0, packet))
+                        new_packet = Packet(packet["Payload"], "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
+                        Trans_queue.put((0, new_packet))
             elif type == "FILE":
                 if not os.path.exists("downloads"):
                     os.mkdir("downloads")
 
-                filename = "downloads/{:s}".format(packet["Payload"]["Filename"])
+                payload_json = json.loads(packet["Payload"])
+
+                filename = "downloads/{:s}".format(payload_json["Filename"])
                 file = open(filename, "wb")
-                file.write(packet["Payload"]["Data"])
+                file.write(eval(payload_json["Data"]))
                 file.close()
 
                 source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                 logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
                 pass
+            elif type == "FILE_HUB":
+                flag = False
+                with hub_lock:
+                    if Hub == [l_addr, l_port]:
+                        flag = True
+
+                if flag:
+                    with map_lock:
+                        for node in Star_map:
+                            if node != (l_addr, l_port):
+                                new_packet = Packet(packet["Payload"], "FILE", l_addr, l_port, node[0], node[1])
+                                Trans_queue.put((0, new_packet))
+
+                    if not os.path.exists("downloads"):
+                        os.mkdir("downloads")
+
+                    payload_json = json.loads(packet["Payload"])
+
+                    filename = "downloads/{:s}".format(payload_json["Filename"])
+                    file = open(filename, "wb")
+                    file.write(eval(payload_json["Data"]))
+                    file.close()
+
+                    source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                    logger.info("Received file from {:s}. Saved in {:s}".format(source_identity, filename))
+
+                else:
+                    # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
+                    with hub_lock:
+                        new_packet = Packet(packet["Payload"], "FILE_HUB", l_addr, l_port, Hub[0], Hub[1])
+                        Trans_queue.put((0, new_packet))
             elif type == "RTT_REQ":
                 activate_thread = False
 

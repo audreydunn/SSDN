@@ -3,10 +3,13 @@ import socket
 import json
 
 
-def core(Trans_queue, hi):
+def core(Trans_queue, End, end_lock):
     logger = logging.getLogger('node')
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     while True:
+        with end_lock:
+            if End[0]:
+                break
         if not Trans_queue.empty():
             priority, packet = Trans_queue.get()
             data = packet.get_as_string()

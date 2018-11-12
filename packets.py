@@ -59,7 +59,7 @@ class Packet(object):
 
 class FilePacket(Packet):
 
-    def __init__(self, filename, s_addr, s_port, d_addr, d_port):
+    def __init__(self, filename, s_addr, s_port, d_addr, d_port, isHub):
         file_max = 64000
         file = open(filename, "rb")
         data = file.read(file_max)
@@ -69,10 +69,14 @@ class FilePacket(Packet):
         # else:
         payload = json.dumps({
             "Filename": filename,
-            "Data": data
+            "Data": data.__repr__()
         })
         file.close()
-        super(FilePacket, self).__init__(payload, "FILE", s_addr, s_port, d_addr, d_port)
+
+        if isHub:
+            super(FilePacket, self).__init__(payload, "FILE", s_addr, s_port, d_addr, d_port)
+        else:
+            super(FilePacket, self).__init__(payload, "FILE_HUB", s_addr, s_port, d_addr, d_port)
 
 
 def json_to_packet(json_string):

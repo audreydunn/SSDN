@@ -19,10 +19,12 @@ from packets import json_to_packet
 # Globals needing locks
 Hub = [None, None]
 Star_map = {}
+End = [False]
 
 # Global Queues
 Trans_queue = PriorityQueue()
 Recv_queue = Queue()
+
 
 '''
 Helper method for calculating RTT sum of this node
@@ -34,12 +36,16 @@ def update_rtt_sum(map, l_addr, l_port):
         if key != (l_addr, l_port):
             sum += map[key][0]
     map[(l_addr, l_port)] = (sum, 0)
+    print("Hello, I have updated the RTT sum.")
+    logger.info("Updated RTT sum to {0}", sum)
+
 
 '''
 Helper method for calculating which node is the current Hub
 Both Locks need to be acquired when this method is run
 '''
 def update_hub(Hub, map):
+    oldhub = Hub
     min = 99999999999
     hub = None
     for key in map:
@@ -48,6 +54,9 @@ def update_hub(Hub, map):
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]
     Hub[1] = hub[1]
+    if oldhub != Hub:
+        logger.info("Hub has changed to {0}".format(Hub))
+
 
 if __name__ == "__main__":
     name = sys.argv[1]
@@ -70,7 +79,7 @@ if __name__ == "__main__":
     fh.setLevel(logging.DEBUG)
     # create console handler with a higher log level
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
+    ch.setLevel(logging.ERROR)
     # create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -102,15 +111,16 @@ if __name__ == "__main__":
     # initialize locks
     map_lock = threading.Lock()
     hub_lock = threading.Lock()
+    end_lock = threading.Lock()
 
     # create event for Ping Thread
     start_pings = threading.Event()
 
     # let's make some threads :)
-    args1 = (Trans_queue, 0)
-    args2 = (Recv_queue, identity)
-    args3 = (Star_map, Trans_queue, map_lock, identity, start_pings)
-    args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings)
+    args1 = (Trans_queue, End, end_lock)
+    args2 = (Recv_queue, identity, End, end_lock)
+    args3 = (Star_map, Trans_queue, map_lock, identity, start_pings, End, end_lock)
+    args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)
@@ -138,23 +148,45 @@ if __name__ == "__main__":
             # gets stuff between "'s -> send "<message>"
             message = user_input[user_input.find('"')+1:user_input.find('"', user_input.find('"')+1)]
 
+            flag = False
             with hub_lock:
-                packet = Packet(message, "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
+                curr_hub = Hub
+                if curr_hub == [l_addr, int(l_port)]:
+                    flag = True
 
-            Trans_queue.put((0, packet))
-
-            logger.info("Added packet with message \"{:s}\" to send queue.".format(message))
+            if flag:
+                with map_lock:
+                    for node in Star_map:
+                        if node != (l_addr, int(l_port)):
+                            packet = Packet(message, "MSG", l_addr, l_port, node[0], node[1])
+                            Trans_queue.put((0, packet))
+                            logger.info("Added packets to transmit message \"{:s}\" to send queue.".format(message))
+            else:
+                packet = Packet(message, "MSG_HUB", l_addr, l_port, curr_hub[0], curr_hub[1])
+                Trans_queue.put((0, packet))
+                logger.info("Added packet with message to hub \"{:s}\" to send queue.".format(message))
         # is send file?
         elif file_pattern.match(user_input):
             # gets filename -> |s|e|n|d| |<filename>|
             filename = user_input[5:]
 
+            flag = False
             with hub_lock:
-                packet = FilePacket(filename, l_addr, l_port, Hub[0], Hub[1])
+                curr_hub = Hub
+                if curr_hub == [l_addr, int(l_port)]:
+                    flag = True
 
-            Trans_queue.put((0, packet))
-
-            logger.info("Added packet with file \"{:s}\" to send queue.".format(filename))
+            if flag:
+                with map_lock:
+                    for node in Star_map:
+                        if node != (l_addr, int(l_port)):
+                            packet = FilePacket(filename, l_addr, l_port, node[0], node[1], True)
+                            Trans_queue.put((0, packet))
+                            logger.info("Added packets to transmit file \"{:s}\" to send queue.".format(filename))
+            else:
+                packet = FilePacket(filename, l_addr, l_port, curr_hub[0], curr_hub[1], False)
+                Trans_queue.put((0, packet))
+                logger.info("Added packet with file to hub \"{:s}\" to send queue.".format(filename))
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
             with map_lock:
@@ -167,8 +199,16 @@ if __name__ == "__main__":
             logger.debug("Printed status.")
         elif user_input == "disconnect":
             logger.info("Node disconnected.")
+            with end_lock:
+                End[0] = True
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.sendto("KILL".encode('utf-8'), (l_addr, int(l_port)))
+            start_pings.set()
+            recv_thread.join()
+            ping_thread.join()
+            trans_thread.join()
+            proc_thread.join()
             break
-            # might want to close some shit too
         elif user_input == "show-log":
             print("--BEGIN LOG--")
             f = open(logging_filename, 'r')

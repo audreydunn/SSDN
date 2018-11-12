@@ -46,7 +46,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                     with map_lock:
                         for node in Star_map:
                             if node != (l_addr, l_port):
-                                new_packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
+                                new_packet = Packet(packet["Payload"], "MSG", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], node[0], node[1])
                                 Trans_queue.put((0, new_packet))
                     source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                     logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
@@ -82,7 +82,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                     with map_lock:
                         for node in Star_map:
                             if node != (l_addr, l_port):
-                                new_packet = Packet(packet["Payload"], "FILE", l_addr, l_port, node[0], node[1])
+                                new_packet = Packet(packet["Payload"], "FILE", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], node[0], node[1])
                                 Trans_queue.put((0, new_packet))
 
                     if not os.path.exists("downloads"):

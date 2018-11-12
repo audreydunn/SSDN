@@ -55,7 +55,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                     with hub_lock:
-                        new_packet = Packet(packet["Payload"], "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
+                        new_packet = Packet(packet["Payload"], "MSG_HUB", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], Hub[0], Hub[1])
                         Trans_queue.put((0, new_packet))
             elif type == "FILE":
                 if not os.path.exists("downloads"):
@@ -102,7 +102,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 else:
                     # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                     with hub_lock:
-                        new_packet = Packet(packet["Payload"], "FILE_HUB", l_addr, l_port, Hub[0], Hub[1])
+                        new_packet = Packet(packet["Payload"], "FILE_HUB", packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"], Hub[0], Hub[1])
                         Trans_queue.put((0, new_packet))
             elif type == "RTT_REQ":
                 activate_thread = False

@@ -36,8 +36,8 @@ def update_rtt_sum(map, l_addr, l_port):
         if key != (l_addr, l_port):
             sum += map[key][0]
     map[(l_addr, l_port)] = (sum, 0)
-    print("Hello, I have updated the RTT sum.")
-    logger.info("Updated RTT sum to {0}", sum)
+    logger_internal = logging.getLogger('node')
+    logger_internal.info("Updated RTT sum to {0}".format(sum))
 
 
 '''
@@ -55,7 +55,8 @@ def update_hub(Hub, map):
     Hub[0] = hub[0]
     Hub[1] = hub[1]
     if oldhub != Hub:
-        logger.info("Hub has changed to {0}".format(Hub))
+        logger_internal = logging.getLogger('node')
+        logger_internal.info("Hub has changed to {0}".format(Hub))
 
 
 if __name__ == "__main__":
@@ -192,7 +193,7 @@ if __name__ == "__main__":
             with map_lock:
                 curr_map = Star_map
                 for key, value in curr_map.items():
-                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3}".format(key[0], key[1], value[0], value[1]))
+                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3}".format(key[0], key[1], value[1], value[0]))
             with hub_lock:
                 print("HUB: {0}:{1}".format(Hub[0], Hub[1]))
             print("--END STATUS--")

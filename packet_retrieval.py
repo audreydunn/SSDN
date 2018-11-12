@@ -14,6 +14,6 @@ def core(Recv_queue, identity, End, end_lock):
         with end_lock:
             if End[0]:
                 break
-        data_json = json.loads(data)
+        # data_json = json.loads(data)
         # logger.info("Received packet of type {0} from {1}.".format(data_json["Header"]["Type"], addr))
         Recv_queue.put(data)

@@ -195,7 +195,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                         # update source node in our mapping
                         Star_map[source_node] = [sent_map[source_node][0], RTT, Star_map[source_node][2], Star_map[source_node][3]]
 
-                        update_rtt_sum(Star_map, l_addr, l_port)
+                        update_rtt_sum(Star_map, l_addr, l_port, default_threshold)
 
                         with hub_lock:
                             update_hub(Hub, Star_map)

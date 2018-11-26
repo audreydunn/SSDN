@@ -31,12 +31,12 @@ Recv_queue = Queue()
 Helper method for calculating RTT sum of this node
 Star_map lock needs to be acquired
 '''
-def update_rtt_sum(map, l_addr, l_port):
+def update_rtt_sum(map, l_addr, l_port, default_threshold):
     sum = 0
     for key in map:
         if key != (l_addr, l_port):
             sum += map[key][1]
-    map[(l_addr, l_port)] = (sum, 0, 0)
+    map[(l_addr, l_port)] = (sum, 0, 0, default_threshold)
     logger_internal = logging.getLogger('node')
     logger_internal.info("Updated RTT sum to {0}".format(sum))
 

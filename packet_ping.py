@@ -23,6 +23,6 @@ def core(Star_map, Trans_queue, map_lock, identity, start_pings, End, end_lock):
                         "Timestamp": datetime.datetime.now().__repr__()
                     })
                     packet = Packet(payload, "RTT_REQ", l_addr, l_port, node[0], node[1])
-                    Trans_queue.put((1, packet))
+                    Trans_queue.put((2, packet))
         # wait for 60 sec
         time.sleep(20)

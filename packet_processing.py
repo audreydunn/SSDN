@@ -29,23 +29,44 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                 # send NACK
                 resp_packet = Packet("NACK", "NACK", l_port, l_addr, packet["Header"]["SourceAddr"],
                                      packet["Header"]["SourcePort"])
+
+                source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                with map_lock:
+                    # update counter of source node to be +1
+                    Star_map[source_node] = [sent_map[source_node][0], sent_map[source_node][1], sent_map[source_node][2] + 1]
+
                 Trans_queue.put((1, resp_packet))
             else:
                 # send ACK
                 resp_packet = Packet("ACK", "ACK", l_port, l_addr, packet["Header"]["SourceAddr"],
                                      packet["Header"]["SourcePort"])
+
+                source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                with map_lock:
+                    # update counter of source node to be +1
+                    Star_map[source_node] = [sent_map[source_node][0], sent_map[source_node][1], sent_map[source_node][2] + 1]
+
                 Trans_queue.put((1, resp_packet))
                 type = packet["Header"]["Type"]
 
                 if type == "ACK":
-                    # no packet loss in Milestone 2
-                    pass
+                    source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+
+                    with map_lock:
+                        # update counter of source node to be -1 if > 0
+                        counter = sent_map[source_node][2]
+                        if counter > 0:
+                            counter -= 1
+                        Star_map[source_node] = [sent_map[source_node][0], sent_map[source_node][1], counter]
                 elif type == "NACK":
-                    # no packet loss in Milestone 2
-                    pass
-                elif type == "END":
-                    # no losing nodes in Milestone 2
-                    pass
+                    source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+
+                    with map_lock:
+                        # update counter of source node to be -1 if > 0
+                        counter = sent_map[source_node][2]
+                        if counter > 0:
+                            counter -= 1
+                        Star_map[source_node] = [sent_map[source_node][0], sent_map[source_node][1], counter]
                 elif type == "MSG":
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
                     logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
@@ -132,7 +153,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
                         # add new node to our map if known by other node
                         for i in sent_map:
                             if i not in Star_map:
-                                Star_map[i] = [sent_map[i][0], 0]
+                                Star_map[i] = [sent_map[i][0], 0, sent_map[i][2]]
 
                     payload = json.dumps({
                         "Map": Star_map.__repr__(),
@@ -161,7 +182,7 @@ def core(Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n
 
                     with map_lock:
                         # update source node in our mapping
-                        Star_map[source_node] = [sent_map[source_node][0], RTT]
+                        Star_map[source_node] = [sent_map[source_node][0], RTT, sent_map[source_node][2]]
 
                         update_rtt_sum(Star_map, l_addr, l_port)
 

@@ -35,7 +35,7 @@ def update_rtt_sum(map, l_addr, l_port):
     for key in map:
         if key != (l_addr, l_port):
             sum += map[key][1]
-    map[(l_addr, l_port)] = (sum, 0)
+    map[(l_addr, l_port)] = (sum, 0, 0)
     logger_internal = logging.getLogger('node')
     logger_internal.info("Updated RTT sum to {0}".format(sum))
 
@@ -98,11 +98,11 @@ if __name__ == "__main__":
     n = max_nodes
 
     # create our initial node entry in the star map
-    Star_map[(l_addr, int(l_port))] = [0, 0]
+    Star_map[(l_addr, int(l_port))] = [0, 0, 0]
 
     # create initial entry for POC if one exists:
     if poc_addr != '0':
-        Star_map[(poc_addr, int(poc_port))] = [0, 0]
+        Star_map[(poc_addr, int(poc_port))] = [0, 0, 0]
 
     # initialize Hub to our node
     Hub[0], Hub[1] = l_addr, int(l_port)

@@ -183,8 +183,6 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                     if activate_thread:
                         start_pings.set()
                 elif type == "RTT_RESP":
-                    activate_thread = False
-
                     payload_json = json.loads(packet["Payload"])
                     sent_map = eval(payload_json["Map"])
                     sent_time = payload_json["Timestamp"]

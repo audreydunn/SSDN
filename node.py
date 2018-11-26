@@ -20,6 +20,7 @@ from packets import json_to_packet
 Hub = [None, None]
 Star_map = {}
 End = [False]
+History = []
 
 # Global Queues
 Trans_queue = PriorityQueue()
@@ -114,12 +115,13 @@ if __name__ == "__main__":
     map_lock = threading.Lock()
     hub_lock = threading.Lock()
     end_lock = threading.Lock()
+    history_lock = threading.Lock()
 
     # create event for Ping Thread
     start_pings = threading.Event()
 
     # let's make some threads :)
-    args1 = (Trans_queue, End, end_lock)
+    args1 = (Trans_queue, Star_map, map_lock, History, history_lock, End, end_lock)
     args2 = (Recv_queue, identity, End, end_lock)
     args3 = (Star_map, Trans_queue, map_lock, identity, start_pings, End, end_lock)
     args4 = (Star_map, Hub, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock)

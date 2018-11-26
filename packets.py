@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import datetime
 
 
 class Packet(object):
@@ -13,6 +14,8 @@ class Packet(object):
         self.d_addr = d_addr
         self.d_port = d_port
         self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
+        self.timestamp = datetime.datetime.now()
+        self.json = json.dumps({})
 
         # sets length based off of packet-type
         if packet_type == "FILE":
@@ -23,18 +26,7 @@ class Packet(object):
             self.length = 0  # TODO: decide if other packets need it (MAP???)
 
         # makes packet data into a json
-        self.json = json.dumps({
-            "Header": {
-                "Type": self.packet_type,
-                "Checksum": self.checksum,
-                "Length": self.length,
-                "SourceAddr": self.s_addr,
-                "SourcePort": self.s_port,
-                "DestAddr": self.d_addr,
-                "DestPort": self.d_port
-            },
-            "Payload": self.payload
-        })
+        self.update_json()
 
     def __eq__(self, other):
         return self.length == other.length
@@ -45,15 +37,49 @@ class Packet(object):
     def __gt__(self, other):
         return self.length > other.length
 
-    ###########
-    # GETTERS #
-    ###########
+    #######################
+    # GETTERS AND SETTERS #
+    #######################
 
     '''
     Return packet as a json string
     '''
     def get_as_string(self):
         return self.json
+
+    '''
+    Get timestamp
+    '''
+    def get_timestamp(self):
+        return self.timestamp
+
+    '''
+    Get checksum
+    '''
+    def get_checksum(self):
+        return self.checksum
+
+    '''
+    Set timestamp
+    '''
+    def set_timestamp(self, new_time):
+        self.timestamp = new_time
+        self.update_json()
+
+    def update_json(self):
+        self.json = json.dumps({
+            "Header": {
+                "Type": self.packet_type,
+                "Checksum": self.checksum,
+                "Length": self.length,
+                "SourceAddr": self.s_addr,
+                "SourcePort": self.s_port,
+                "DestAddr": self.d_addr,
+                "DestPort": self.d_port,
+                "Timestamp": self.timestamp
+            },
+            "Payload": self.payload
+        })
 
 
 class FilePacket(Packet):

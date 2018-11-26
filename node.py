@@ -97,6 +97,7 @@ if __name__ == "__main__":
     # initialize static variables (these never change)
     identity = name + ":" + l_addr + ":" + l_port
     n = max_nodes
+    default_threshold = 3
 
     # create our initial node entry in the star map
     Star_map[(l_addr, int(l_port))] = [0, 0, 0]
@@ -124,7 +125,7 @@ if __name__ == "__main__":
     args1 = (Trans_queue, Star_map, map_lock, History, history_lock, End, end_lock)
     args2 = (Recv_queue, identity, End, end_lock)
     args3 = (Star_map, Trans_queue, History, history_lock, map_lock, identity, start_pings, End, end_lock)
-    args4 = (Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock)
+    args4 = (Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock, default_threshold)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)
     ping_thread = threading.Thread(target=packet_ping.core, name="ping", args=args3)

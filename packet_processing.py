@@ -9,7 +9,7 @@ from packets import Packet
 from packets import FilePacket
 
 
-def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock):
+def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock, default_threshold):
     logger = logging.getLogger('node')
     name, l_addr, l_port = identity.split(":")
     l_port = int(l_port)
@@ -166,7 +166,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                         # add new node to our map if known by other node
                         for i in sent_map:
                             if i not in Star_map:
-                                Star_map[i] = [sent_map[i][0], 0, sent_map[i][2]]
+                                Star_map[i] = [sent_map[i][0], 0, 0, default_threshold]
 
                     payload = json.dumps({
                         "Map": Star_map.__repr__(),
@@ -195,7 +195,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
 
                     with map_lock:
                         # update source node in our mapping
-                        Star_map[source_node] = [sent_map[source_node][0], RTT, sent_map[source_node][2]]
+                        Star_map[source_node] = [sent_map[source_node][0], RTT, Star_map[source_node][2], Star_map[source_node][3]]
 
                         update_rtt_sum(Star_map, l_addr, l_port)
 

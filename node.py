@@ -163,7 +163,7 @@ if __name__ == "__main__":
             with map_lock:
                 curr_map = Star_map
                 for key, value in curr_map.items():
-                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3}".format(key[0], key[1], value[1], value[0]))
+                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3} | TIMEOUT-COUNTER: {4}".format(key[0], key[1], value[1], value[0], value[2]))
             with hub_lock:
                 print("HUB: {0}:{1}".format(Hub[0], Hub[1]))
             print("--END STATUS--")

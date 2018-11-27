@@ -3,7 +3,7 @@ import time
 import datetime
 import json
 from packets import Packet
-from node import update_rtt_sum, update_hub
+from helper_methods import update_rtt_sum, update_hub
 
 
 def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, identity, start_pings, End, end_lock, default_threshold):

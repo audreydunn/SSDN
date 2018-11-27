@@ -6,7 +6,7 @@ import os
 import hashlib
 from packets import Packet
 from packets import FilePacket
-from node import update_rtt_sum, update_hub
+from helper_methods import update_rtt_sum, update_hub
 
 
 def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock, default_threshold):

@@ -14,7 +14,7 @@ class Packet(object):
         self.d_addr = d_addr
         self.d_port = d_port
         self.checksum = hashlib.md5(payload.encode('utf-8')).hexdigest()
-        self.timestamp = str(datetime.datetime.now())
+        self.timestamp = datetime.datetime.now().__repr__()
         self.json = json.dumps({})
 
         # sets length based off of packet-type

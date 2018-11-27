@@ -56,7 +56,7 @@ def update_hub(Hub, map, default_threshold):
     Hub[0] = hub[0]
     Hub[1] = hub[1]
     Star_map[(Hub[0], Hub[1])] = [Star_map[(Hub[0], Hub[1])][0], Star_map[(Hub[0], Hub[1])][1],
-                                    Star_map[(Hub[0], Hub[1])][2], Star_map[(Hub[0], Hub[1])][3] + len(Star_map)]
+                                    Star_map[(Hub[0], Hub[1])][2], Star_map[(Hub[0], Hub[1])][3] + 1]
     if oldhub != Hub:
         Star_map[(oldhub[0], oldhub[1])] = [Star_map[(oldhub[0], oldhub[1])][0], Star_map[(oldhub[0], oldhub[1])][1],
                                         Star_map[(oldhub[0], oldhub[1])][2], default_threshold]

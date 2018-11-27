@@ -45,7 +45,7 @@ def update_rtt_sum(map, l_addr, l_port, default_threshold):
 Helper method for calculating which node is the current Hub
 Both Locks need to be acquired when this method is run
 '''
-def update_hub(Hub, map):
+def update_hub(Hub, map, default_threshold):
     oldhub = Hub
     min = 99999999999
     hub = None
@@ -55,7 +55,11 @@ def update_hub(Hub, map):
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]
     Hub[1] = hub[1]
+    Star_map[(Hub[0], Hub[1])] = [Star_map[(Hub[0], Hub[1])][0], Star_map[(Hub[0], Hub[1])][1],
+                                    Star_map[(Hub[0], Hub[1])][2], Star_map[(Hub[0], Hub[1])][3] + len(Star_map)]
     if oldhub != Hub:
+        Star_map[(oldhub[0], oldhub[1])] = [Star_map[(oldhub[0], oldhub[1])][0], Star_map[(oldhub[0], oldhub[1])][1],
+                                        Star_map[(oldhub[0], oldhub[1])][2], default_threshold]
         logger_internal = logging.getLogger('node')
         logger_internal.info("Hub has changed to {0}".format(Hub))
 
@@ -100,11 +104,11 @@ if __name__ == "__main__":
     default_threshold = 3
 
     # create our initial node entry in the star map
-    Star_map[(l_addr, int(l_port))] = [0, 0, 0]
+    Star_map[(l_addr, int(l_port))] = [0, 0, 0, default_threshold]
 
     # create initial entry for POC if one exists:
     if poc_addr != '0':
-        Star_map[(poc_addr, int(poc_port))] = [0, 0, 0]
+        Star_map[(poc_addr, int(poc_port))] = [0, 0, 0, default_threshold]
 
     # initialize Hub to our node
     Hub[0], Hub[1] = l_addr, int(l_port)
@@ -124,7 +128,7 @@ if __name__ == "__main__":
     # let's make some threads :)
     args1 = (Trans_queue, Star_map, map_lock, History, history_lock, End, end_lock)
     args2 = (Recv_queue, identity, End, end_lock)
-    args3 = (Star_map, Trans_queue, History, history_lock, map_lock, identity, start_pings, End, end_lock)
+    args3 = (Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, identity, start_pings, End, end_lock, default_threshold)
     args4 = (Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock, default_threshold)
     trans_thread = threading.Thread(target=packet_transmission.core, name="trans", args=args1)
     recv_thread = threading.Thread(target=packet_retrieval.core, name="recv", args=args2)

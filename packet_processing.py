@@ -196,4 +196,4 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                         update_rtt_sum(Star_map, l_addr, l_port, default_threshold)
 
                         with hub_lock:
-                            update_hub(Hub, Star_map)
+                            update_hub(Hub, Star_map, default_threshold)

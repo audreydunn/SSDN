@@ -4,8 +4,7 @@ import datetime
 import copy
 import os
 import hashlib
-from packets import Packet
-from packets import FilePacket
+from packets import Packet, FilePacket
 from helper_methods import update_rtt_sum, update_hub
 
 
@@ -193,7 +192,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                     sent_time = payload_json["Timestamp"]
                     source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
                     logger.info("Received RTT response from {0}".format(source_node))
-                    diff = (datetime.datetime.now() - data.get_timestamp()).microseconds
+                    diff = datetime.datetime.now() - eval(packet["Header"]["Timestamp"])
                     RTT = float(diff.seconds) + (diff.microseconds / 1000000.0)
 
                     with map_lock:

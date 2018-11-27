@@ -28,9 +28,11 @@ def update_hub(Hub, map, default_threshold):
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]
     Hub[1] = hub[1]
-    map[(Hub[0], Hub[1])] = [map[(Hub[0], Hub[1])][0], map[(Hub[0], Hub[1])][1],
-                                    map[(Hub[0], Hub[1])][2], map[(Hub[0], Hub[1])][3] + 1]
+
     if oldhub != Hub:
+        map[(Hub[0], Hub[1])] = [map[(Hub[0], Hub[1])][0], map[(Hub[0], Hub[1])][1],
+                                        map[(Hub[0], Hub[1])][2], map[(Hub[0], Hub[1])][3] + 1]
+                                        
         map[(oldhub[0], oldhub[1])] = [map[(oldhub[0], oldhub[1])][0], map[(oldhub[0], oldhub[1])][1],
                                         map[(oldhub[0], oldhub[1])][2], default_threshold]
         logger_internal = logging.getLogger('node')

@@ -23,9 +23,11 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
                     Trans_queue.put((0, curr_packet))
         with map_lock:
             update = False
+            repeat = True
             for node in Star_map:
-                if Star_map[node][2] > Star_map[node][3]:
-                    update  = True
+                if repeat and Star_map[node][2] > Star_map[node][3]:
+                    update = True
+                    repeat = False
                     del Star_map[node]
             if update:
                 # if node was deleted we need to update our values

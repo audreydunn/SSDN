@@ -13,7 +13,7 @@ def core(Trans_queue, Star_map, map_lock, History, history_lock, End, end_lock):
                 break
         if not Trans_queue.empty():
             priority, packet = Trans_queue.get()
-            packet.set_timestamp(datetime.datetime.now())
+            packet.set_timestamp(str(datetime.datetime.now()))
             data = packet.get_as_string()
             json_data = json.loads(data)
             addr = json_data["Header"]["DestAddr"]

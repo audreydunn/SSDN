@@ -4,9 +4,9 @@ import datetime
 import copy
 import os
 import hashlib
-from node import update_rtt_sum, update_hub
 from packets import Packet
 from packets import FilePacket
+from node import update_rtt_sum, update_hub
 
 
 def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock, hub_lock, identity, n, start_pings, End, end_lock, default_threshold):
@@ -24,8 +24,9 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
             source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
             with map_lock:
                 # if we get a message, reset counter to 0
-                Star_map[source_node] = [Star_map[source_node][0], Star_map[source_node][1], 0,
-                                         Star_map[source_node][3]]
+                if source_node in Star_map:
+                    Star_map[source_node] = [Star_map[source_node][0], Star_map[source_node][1], 0,
+                                             Star_map[source_node][3]]
 
             header_checksum = packet["Header"]["Checksum"]
             calc_checksum = hashlib.md5(packet["Payload"].encode('utf-8')).hexdigest()

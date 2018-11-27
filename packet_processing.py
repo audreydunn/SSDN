@@ -60,7 +60,6 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                         for curr_packet in History:
                             if curr_packet.get_timestamp() == timestamp or curr_packet.get_checksum() == checksum:
                                 History.remove(curr_packet)
-                                break
                 elif type == "NACK":
                     payload_json = json.loads(packet["Payload"])
                     timestamp = payload_json["Timestamp"]
@@ -71,7 +70,6 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                             if curr_packet.get_timestamp() == timestamp or curr_packet.get_checksum() == checksum:
                                 History.remove(curr_packet)
                                 Trans_queue.put((0, curr_packet))
-                                break
                 elif type == "MSG":
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
                     logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))

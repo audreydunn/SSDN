@@ -63,7 +63,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                                 History.remove(curr_packet)
 
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    print("Received ACK from {0}: {1}".format(source_identity, packet["Payload"]))
+                    logger.debug("Received ACK from {0}: {1}".format(source_identity, packet["Payload"]))
                 elif type == "NACK":
                     payload_json = json.loads(packet["Payload"])
                     timestamp = payload_json["Timestamp"]
@@ -76,7 +76,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                                 Trans_queue.put((0, curr_packet))
 
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    print("Received NACK from {0}: {1}".format(source_identity, packet["Payload"]))
+                    logger.debug("Received NACK from {0}: {1}".format(source_identity, packet["Payload"]))
                 elif type == "MSG":
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
                     logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))

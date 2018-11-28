@@ -24,11 +24,14 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
         with map_lock:
             update = False
             repeat = True
-            for node in Star_map:
-                if repeat and Star_map[node][2] > Star_map[node][3]:
+            i = 0
+            keys = list(Star_map.keys())
+            while (repeat and i < len(keys)):
+                if Star_map[keys[i]][2] > Star_map[keys[i]][3]:
                     update = True
                     repeat = False
-                    del Star_map[node]
+                    del Star_map[keys[i]]
+                i += 1
             if update:
                 # if node was deleted we need to update our values
                 update_rtt_sum(Star_map, l_addr, l_port, default_threshold)

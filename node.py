@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # initialize static variables (these never change)
     identity = name + ":" + l_addr + ":" + l_port
     n = max_nodes
-    default_threshold = 5
+    default_threshold = 4
 
     # create our initial node entry in the star map
     Star_map[(l_addr, int(l_port))] = [0, 0, 0, default_threshold]

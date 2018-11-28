@@ -1,4 +1,5 @@
 import logging
+from collections import deque
 
 '''
 Helper method for calculating RTT sum of this node
@@ -8,8 +9,8 @@ def update_rtt_sum(map, l_addr, l_port, default_threshold):
     sum = 0
     for key in map:
         if key != (l_addr, l_port) and map[key][2] < map[key][3]:
-            sum += map[key][1]
-    map[(l_addr, l_port)] = (sum, 0, 0, default_threshold)
+            sum += minimum(map[key][1])
+    map[(l_addr, l_port)] = (sum, deque(maxlen=4), 0, default_threshold)
     logger_internal = logging.getLogger('node')
     logger_internal.info("Updated RTT sum to {0}".format(sum))
 

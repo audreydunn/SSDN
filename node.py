@@ -9,7 +9,6 @@ import logging
 import logging.handlers
 import os
 import json
-from collections import deque
 
 import threading
 from queue import Queue, PriorityQueue
@@ -68,11 +67,11 @@ if __name__ == "__main__":
     default_threshold = 4
 
     # create our initial node entry in the star map
-    Star_map[(l_addr, int(l_port))] = [0, deque(maxlen=4), 0, default_threshold]
+    Star_map[(l_addr, int(l_port))] = [0, 0, 0, default_threshold]
 
     # create initial entry for POC if one exists:
     if poc_addr != '0':
-        Star_map[(poc_addr, int(poc_port))] = [0, deque(maxlen=4), 0, default_threshold]
+        Star_map[(poc_addr, int(poc_port))] = [0, 0, 0, default_threshold]
 
     # initialize Hub to our node
     Hub[0], Hub[1] = l_addr, int(l_port)

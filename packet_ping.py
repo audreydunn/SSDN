@@ -16,21 +16,22 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
         with end_lock:
             if End[0]:
                 break
+
         with history_lock:
             for curr_packet in History:
                 if (datetime.datetime.now() - curr_packet.get_timestamp()).microseconds >= 500000:
                     History.remove(curr_packet)
                     Trans_queue.put((0, curr_packet))
+
         with map_lock:
             update = False
             repeat = True
             i = 0
             keys = list(Star_map.keys())
-            while (repeat and i < len(keys)):
+            while repeat and i < len(keys):
                 if Star_map[keys[i]][2] > Star_map[keys[i]][3]:
                     update = True
                     repeat = False
-                    del Star_map[keys[i]]
                 i += 1
             if update:
                 # if node was deleted we need to update our values
@@ -39,13 +40,12 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
                 with hub_lock:
                     update_hub(Hub, Star_map, default_threshold)
 
-
         counter += 1
-        if counter == 10:  # we start pinging now
+        if counter == 3:  # we start pinging now
             # load queue with low priority packets
             with map_lock:
                 for node in Star_map:
-                    if node != (l_addr, l_port):
+                    if node != (l_addr, l_port) and Star_map[node][2] < Star_map[node][3]:
                         payload = json.dumps({
                             "Map": Star_map.__repr__(),
                             "Timestamp": datetime.datetime.now().__repr__()

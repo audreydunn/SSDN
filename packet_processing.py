@@ -18,7 +18,6 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                 break
         if not Recv_queue.empty():
             data = Recv_queue.get()
-
             packet = json.loads(data.strip())
             source_node = (packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
             with map_lock:
@@ -62,7 +61,7 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                                 History.remove(curr_packet)
 
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    logger.debug("Received ACK from {0}: {1}".format(source_identity, packet["Payload"]))
+                    logger.debug("Received ACK from {0}".format(source_identity))
                 elif type == "NACK":
                     payload_json = json.loads(packet["Payload"])
                     timestamp = payload_json["Timestamp"]
@@ -75,13 +74,15 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                                 Trans_queue.put((0, curr_packet))
 
                     source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
-                    logger.debug("Received NACK from {0}: {1}".format(source_identity, packet["Payload"]))
+                    logger.debug("Received NACK from {0}".format(source_identity))
                 elif type == "MSG":
-                    source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],packet["Header"]["SourcePort"])
-                    logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
-                    print("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
+                    payload_json = json.loads(packet["Payload"])
+                    source_identity = "{0}:{1}".format(payload_json["SourceAddr"], payload_json["SourcePort"])
+                    logger.info("Received message from {0}: {1}".format(source_identity, payload_json["Message"]))
+                    print("Received message from {0}: {1}".format(source_identity, payload_json["Message"]))
                 elif type == "MSG_HUB":
                     flag = False
+                    payload_json = json.loads(packet["Payload"])
                     with hub_lock:
                         if Hub == [l_addr, l_port]:
                             flag = True
@@ -89,21 +90,18 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                     if flag:
                         with map_lock:
                             for node in Star_map:
-                                if node != (l_addr, l_port) and node != (packet["Header"]["SourceAddr"],
-                                                                         int(packet["Header"]["SourcePort"])):
-                                    new_packet = Packet(packet["Payload"], "MSG", packet["Header"]["SourceAddr"],
-                                                        packet["Header"]["SourcePort"], node[0], node[1])
+                                if node != (l_addr, l_port) and Star_map[node][2] < Star_map[node][3] and node != (payload_json["SourceAddr"], int(payload_json["SourcePort"])):
+                                    new_packet = Packet(packet["Payload"], "MSG", l_addr, l_port, node[0], node[1])
                                     Trans_queue.put((0, new_packet))
-                        source_identity = "{:s}:{:s}".format(packet["Header"]["SourceAddr"],
-                                                             packet["Header"]["SourcePort"])
-                        logger.info("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
-                        print("Received message from {0}: {1}".format(source_identity, packet["Payload"]))
+
+                        source_identity = "{0}:{1}".format(payload_json["SourceAddr"], payload_json["SourcePort"])
+                        logger.info("Received message from {0}: {1}".format(source_identity, payload_json["Message"]))
+                        print("Received message from {0}: {1}".format(source_identity, payload_json["Message"]))
 
                     else:
                         # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                         with hub_lock:
-                            new_packet = Packet(packet["Payload"], "MSG_HUB", packet["Header"]["SourceAddr"],
-                                                packet["Header"]["SourcePort"], Hub[0], Hub[1])
+                            new_packet = Packet(packet["Payload"], "MSG_HUB", l_addr, l_port, Hub[0], Hub[1])
                             Trans_queue.put((0, new_packet))
                 elif type == "FILE":
                     if not os.path.exists("downloads"):
@@ -116,12 +114,13 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                     file.write(eval(payload_json["Data"]))
                     file.close()
 
-                    source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"], packet["Header"]["SourcePort"])
+                    source_identity = "{0}:{1}".format(payload_json["SourceAddr"], payload_json["SourcePort"])
                     logger.info("Received file from {0}. Saved in {1}".format(source_identity, filename))
                     print("Received file from {0}. Saved in {1}".format(source_identity, filename))
                     pass
                 elif type == "FILE_HUB":
                     flag = False
+                    payload_json = json.loads(packet["Payload"])
                     with hub_lock:
                         if Hub == [l_addr, l_port]:
                             flag = True
@@ -129,32 +128,26 @@ def core(Star_map, Hub, History, history_lock, Recv_queue, Trans_queue, map_lock
                     if flag:
                         with map_lock:
                             for node in Star_map:
-                                if node != (l_addr, l_port) and node != (packet["Header"]["SourceAddr"],
-                                                                         int(packet["Header"]["SourcePort"])):
-                                    new_packet = Packet(packet["Payload"], "FILE", packet["Header"]["SourceAddr"],
-                                                        packet["Header"]["SourcePort"], node[0], node[1])
+                                if node != (l_addr, l_port) and Star_map[node][2] < Star_map[node][3] and node != (payload_json["SourceAddr"], int(payload_json["SourcePort"])):
+                                    new_packet = Packet(packet["Payload"], "FILE", l_addr, l_port, node[0], node[1])
                                     Trans_queue.put((0, new_packet))
 
                         if not os.path.exists("downloads"):
                             os.mkdir("downloads")
-
-                        payload_json = json.loads(packet["Payload"])
 
                         filename = "downloads/{:s}".format(payload_json["Filename"])
                         file = open(filename, "wb")
                         file.write(eval(payload_json["Data"]))
                         file.close()
 
-                        source_identity = "{0}:{1}".format(packet["Header"]["SourceAddr"],
-                                                           packet["Header"]["SourcePort"])
+                        source_identity = "{0}:{1}".format(payload_json["SourceAddr"], payload_json["SourcePort"])
                         logger.info("Received file from {0}. Saved in {1}".format(source_identity, filename))
                         print("Received file from {0}. Saved in {1}".format(source_identity, filename))
 
                     else:
                         # if we're not the hub let's send the packet to who we think is the hub until hub converges in the network
                         with hub_lock:
-                            new_packet = Packet(packet["Payload"], "FILE_HUB", packet["Header"]["SourceAddr"],
-                                                packet["Header"]["SourcePort"], Hub[0], Hub[1])
+                            new_packet = Packet(packet["Payload"], "FILE_HUB", l_addr, l_port, Hub[0], Hub[1])
                             Trans_queue.put((0, new_packet))
                 elif type == "RTT_REQ":
                     activate_thread = False

@@ -8,6 +8,7 @@ import re
 import logging
 import logging.handlers
 import os
+import json
 
 import threading
 from queue import Queue, PriorityQueue
@@ -125,15 +126,21 @@ if __name__ == "__main__":
                 if curr_hub == [l_addr, int(l_port)]:
                     flag = True
 
+            payload = json.dumps({
+                "Message": message,
+                "SourceAddr": l_addr,
+                "SourcePort": l_port
+            })
+
             if flag:
                 with map_lock:
                     for node in Star_map:
                         if node != (l_addr, int(l_port)):
-                            packet = Packet(message, "MSG", l_addr, l_port, node[0], node[1])
+                            packet = Packet(payload, "MSG", l_addr, l_port, node[0], node[1])
                             Trans_queue.put((0, packet))
                             logger.info("Added packets to transmit message \"{:s}\" to send queue.".format(message))
             else:
-                packet = Packet(message, "MSG_HUB", l_addr, l_port, curr_hub[0], curr_hub[1])
+                packet = Packet(payload, "MSG_HUB", l_addr, l_port, curr_hub[0], curr_hub[1])
                 Trans_queue.put((0, packet))
                 logger.info("Added packet with message to hub \"{:s}\" to send queue.".format(message))
         # is send file?
@@ -161,9 +168,11 @@ if __name__ == "__main__":
         elif user_input == "show-status":
             print("--BEGIN STATUS--")
             with map_lock:
-                curr_map = Star_map
-                for key, value in curr_map.items():
-                    print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3} | TIMEOUT-COUNTER: {4}".format(key[0], key[1], value[1], value[0], value[2]))
+                for key, value in Star_map.items():
+                    if value[2] < value[3]:
+                        print("IDENTITY: {0}:{1} | RTT: {2} | RTT-SUM: {3} | TIMEOUT-COUNTER: {4}".format(key[0], key[1], value[1], value[0], value[2]))
+                    else:
+                        print("IDENTITY: {0}:{1} | TIMEOUT - DEAD".format(key[0], key[1]))
             with hub_lock:
                 print("HUB: {0}:{1}".format(Hub[0], Hub[1]))
             print("--END STATUS--")

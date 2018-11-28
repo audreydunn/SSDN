@@ -94,6 +94,8 @@ class FilePacket(Packet):
         # else:
         payload = json.dumps({
             "Filename": filename,
+            "SourceAddr": s_addr,
+            "SourcePort": s_port,
             "Data": data.__repr__()
         })
         file.close()

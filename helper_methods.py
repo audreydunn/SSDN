@@ -7,7 +7,7 @@ Star_map lock needs to be acquired
 def update_rtt_sum(map, l_addr, l_port, default_threshold):
     sum = 0
     for key in map:
-        if key != (l_addr, l_port):
+        if key != (l_addr, l_port) and map[key][2] < map[key][3]:
             sum += map[key][1]
     map[(l_addr, l_port)] = (sum, 0, 0, default_threshold)
     logger_internal = logging.getLogger('node')
@@ -23,7 +23,7 @@ def update_hub(Hub, map, default_threshold):
     min = 99999999999
     hub = None
     for key in map:
-        if map[key][0] < min:
+        if map[key][0] < min and map[key][2] < map[key][3]:
             min = map[key][0]
             hub = (key[0], int(key[1]))
     Hub[0] = hub[0]

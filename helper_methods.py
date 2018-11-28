@@ -32,8 +32,19 @@ def update_hub(Hub, map, default_threshold):
     if oldhub != Hub:
         map[(Hub[0], Hub[1])] = [map[(Hub[0], Hub[1])][0], map[(Hub[0], Hub[1])][1],
                                         map[(Hub[0], Hub[1])][2], map[(Hub[0], Hub[1])][3] + 1]
-                                        
+
         map[(oldhub[0], oldhub[1])] = [map[(oldhub[0], oldhub[1])][0], map[(oldhub[0], oldhub[1])][1],
                                         map[(oldhub[0], oldhub[1])][2], default_threshold]
         logger_internal = logging.getLogger('node')
         logger_internal.info("Hub has changed to {0}".format(Hub))
+
+'''
+Helper method for finding minimum of a queue
+'''
+def minimum(queue):
+    min = 999999
+    for item in queue:
+        if item < min:
+            min = item
+
+    return min

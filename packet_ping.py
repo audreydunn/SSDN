@@ -21,6 +21,7 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
             for curr_packet in History:
                 if (datetime.datetime.now() - curr_packet.get_timestamp()).microseconds >= 500000:
                     History.remove(curr_packet)
+                    logger.debug("Attempting to resend packet sent at time {0}".format(curr_packet.get_timestamp()))
                     Trans_queue.put((0, curr_packet))
 
         with map_lock:
@@ -30,6 +31,7 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
             keys = list(Star_map.keys())
             while repeat and i < len(keys):
                 if Star_map[keys[i]][2] > Star_map[keys[i]][3]:
+                    logger.debug("Node {0} is now apparently down/offline.".format(Star_map[keys[i]]))
                     update = True
                     repeat = False
                 i += 1
@@ -43,6 +45,7 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
         counter += 1
         if counter == 3:  # we start pinging now
             # load queue with low priority packets
+            pinglist = []
             with map_lock:
                 for node in Star_map:
                     if node != (l_addr, l_port) and Star_map[node][2] < Star_map[node][3]:
@@ -52,6 +55,8 @@ def core(Star_map, Hub, Trans_queue, History, history_lock, map_lock, hub_lock, 
                         })
                         packet = Packet(payload, "RTT_REQ", l_addr, l_port, node[0], node[1])
                         Trans_queue.put((2, packet))
+                        pinglist.append(str(node))
             counter = 0
+            logger.debug("Pinging the following nodes for RTT: {0}".format(pinglist))
         # wait for 1 sec
         time.sleep(1)
